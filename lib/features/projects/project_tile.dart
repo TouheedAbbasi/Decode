@@ -1,12 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../../core/export/zip_export.dart';
 import '../editor/editor_screen.dart';
 import 'project.dart';
 import 'project_providers.dart';
 import 'time_format.dart';
 
-enum _ProjectAction { rename, duplicate, delete }
+enum _ProjectAction { rename, duplicate, exportZip, delete }
 
 class ProjectTile extends ConsumerWidget {
   const ProjectTile({super.key, required this.project});
@@ -37,6 +43,10 @@ class ProjectTile extends ConsumerWidget {
           PopupMenuItem(
             value: _ProjectAction.duplicate,
             child: Text('Duplicate'),
+          ),
+          PopupMenuItem(
+            value: _ProjectAction.exportZip,
+            child: Text('Export as ZIP'),
           ),
           PopupMenuItem(value: _ProjectAction.delete, child: Text('Delete')),
         ],
@@ -70,6 +80,16 @@ class ProjectTile extends ConsumerWidget {
           await notifier.duplicate(project);
           messenger.showSnackBar(
             const SnackBar(content: Text('Project duplicated')),
+          );
+        case _ProjectAction.exportZip:
+          final temp = await getTemporaryDirectory();
+          final zip = await buildProjectZip(
+            project,
+            Directory(p.join(temp.path, 'exports')),
+          );
+          await Share.shareXFiles(
+            [XFile(zip.path)],
+            text: '${project.name} - Decode project',
           );
         case _ProjectAction.delete:
           final ok = await _confirmDelete(context);

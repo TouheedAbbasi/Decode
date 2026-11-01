@@ -83,6 +83,43 @@ class UserComponentsNotifier extends AsyncNotifier<List<ComponentItem>> {
     state = AsyncData(next);
   }
 
+  Future<void> deleteMany(Set<String> ids) async {
+    final repo = await _repo;
+    final next = [
+      for (final c in await repo.load())
+        if (!ids.contains(c.id)) c,
+    ];
+    await repo.save(next);
+    state = AsyncData(next);
+  }
+
+  Future<void> moveMany(Set<String> ids, String category) async {
+    final repo = await _repo;
+    final next = [
+      for (final c in await repo.load())
+        ids.contains(c.id) ? c.copyWith(category: category) : c,
+    ];
+    await repo.save(next);
+    state = AsyncData(next);
+  }
+
+  Future<void> duplicate(ComponentItem item) => upsert(
+        item.copyWith(
+          id: newId(),
+          name: '${item.name} copy',
+          isUser: true,
+        ),
+      );
+
+  /// Adds imported components (newest first). Returns how many were added.
+  Future<int> importAll(List<ComponentItem> items) async {
+    final repo = await _repo;
+    final next = [...items, ...await repo.load()];
+    await repo.save(next);
+    state = AsyncData(next);
+    return items.length;
+  }
+
   static String newId() => 'u_${DateTime.now().microsecondsSinceEpoch}';
 }
 

@@ -13,6 +13,7 @@ import '../projects/project_repository.dart';
 import 'code_editor_pane.dart';
 import 'code_language.dart';
 import 'editor_buffer.dart';
+import 'find_replace_bar.dart';
 
 class EditorScreen extends ConsumerStatefulWidget {
   const EditorScreen({super.key, required this.project});
@@ -31,6 +32,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   int _index = 0;
   bool _loading = true;
   bool _saving = false;
+  bool _showFind = false;
   String? _error;
   Timer? _autosave;
 
@@ -108,7 +110,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
   void _onChanged() {
     _autosave?.cancel();
-    _autosave = Timer(_autosaveDelay, () => _saveAll(silent: true));
+    if (ref.read(autosaveProvider)) {
+      _autosave = Timer(_autosaveDelay, () => _saveAll(silent: true));
+    }
     if (mounted) setState(() {});
   }
 
@@ -196,6 +200,13 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           ),
           actions: [
             IconButton(
+              tooltip: 'Find and replace',
+              icon: const Icon(Icons.search_rounded),
+              onPressed: _buffers.isEmpty
+                  ? null
+                  : () => setState(() => _showFind = !_showFind),
+            ),
+            IconButton(
               tooltip: 'Save',
               icon: const Icon(Icons.save_outlined),
               onPressed: _buffers.isEmpty ? null : () => _saveAll(),
@@ -226,11 +237,19 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           selected: _index,
           onSelect: (i) => setState(() => _index = i),
         ),
+        if (_showFind)
+          FindReplaceBar(
+            key: ValueKey('find_${buffer.name}'),
+            buffer: buffer,
+            onClose: () => setState(() => _showFind = false),
+          ),
         Expanded(
           child: CodeEditorPane(
             key: ValueKey(buffer.name),
             buffer: buffer,
             fontSize: fontSize,
+            showLineNumbers: ref.watch(lineNumbersProvider),
+            smartTyping: ref.watch(smartTypingProvider),
           ),
         ),
       ],

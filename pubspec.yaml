@@ -1,7 +1,7 @@
 name: decode
 description: Decode by Senpai Studio - a free, ad-free mobile coding IDE for Android.
 publish_to: "none"
-version: 0.2.0+2
+version: 0.3.0+3
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -17,6 +17,8 @@ dependencies:
   webview_flutter: ^4.10.0
   url_launcher: ^6.3.0
   android_intent_plus: ^5.2.0
+  archive: ^3.6.1
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:

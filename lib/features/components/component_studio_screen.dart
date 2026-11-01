@@ -253,6 +253,8 @@ class _ComponentStudioScreenState extends ConsumerState<ComponentStudioScreen> {
               key: ValueKey(buffer.name),
               buffer: buffer,
               fontSize: fontSize,
+              showLineNumbers: ref.watch(lineNumbersProvider),
+              smartTyping: ref.watch(smartTypingProvider),
             ),
           ),
         ],

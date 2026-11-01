@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/settings/settings_providers.dart';
+import '../admin/admin_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -66,7 +67,40 @@ class SettingsScreen extends ConsumerWidget {
               style: TextStyle(fontFamily: 'monospace', fontSize: fontSize),
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 12),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Line numbers'),
+            value: ref.watch(lineNumbersProvider),
+            onChanged: (v) => ref.read(lineNumbersProvider.notifier).set(v),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Autosave'),
+            subtitle: const Text('Save 2 seconds after you stop typing'),
+            value: ref.watch(autosaveProvider),
+            onChanged: (v) => ref.read(autosaveProvider.notifier).set(v),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Smart typing'),
+            subtitle: const Text('Auto-close brackets, quotes and tags'),
+            value: ref.watch(smartTypingProvider),
+            onChanged: (v) => ref.read(smartTypingProvider.notifier).set(v),
+          ),
+          const SizedBox(height: 20),
+          const Text('Tools', style: TextStyle(fontWeight: FontWeight.w600)),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.admin_panel_settings_outlined),
+            title: const Text('Admin Panel'),
+            subtitle: const Text('Manage, back up and import your components'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const AdminScreen()),
+            ),
+          ),
+          const SizedBox(height: 20),
           const Text('About', style: TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           Center(
@@ -80,7 +114,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Decode by Senpai Studio  -  version 0.2.0',
+            'Decode by Senpai Studio  -  version 0.3.0',
             style: TextStyle(color: muted),
           ),
           const SizedBox(height: 12),

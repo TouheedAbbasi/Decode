@@ -47,3 +47,31 @@ class EditorFontSizeNotifier extends Notifier<double> {
 
 final editorFontSizeProvider =
     NotifierProvider<EditorFontSizeNotifier, double>(EditorFontSizeNotifier.new);
+
+/// A true/false setting saved on the device.
+class BoolPrefNotifier extends Notifier<bool> {
+  BoolPrefNotifier(this.key, this.fallback);
+
+  final String key;
+  final bool fallback;
+
+  @override
+  bool build() => ref.watch(sharedPrefsProvider).getBool(key) ?? fallback;
+
+  Future<void> set(bool value) async {
+    state = value;
+    await ref.read(sharedPrefsProvider).setBool(key, value);
+  }
+}
+
+final lineNumbersProvider = NotifierProvider<BoolPrefNotifier, bool>(
+  () => BoolPrefNotifier('line_numbers', true),
+);
+
+final autosaveProvider = NotifierProvider<BoolPrefNotifier, bool>(
+  () => BoolPrefNotifier('autosave', true),
+);
+
+final smartTypingProvider = NotifierProvider<BoolPrefNotifier, bool>(
+  () => BoolPrefNotifier('smart_typing', true),
+);

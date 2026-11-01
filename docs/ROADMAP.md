@@ -11,7 +11,7 @@ Nothing below is marked done until it has been built and tried on a device.
 | 3 | Editor: tabs, highlighting, autocomplete, symbols, undo/redo, save + autosave | Written, awaiting device test |
 | 4 | Live preview (WebView), Open in Chrome, quick preview | Written, awaiting device test |
 | 5 | Component library: 11 basics, 6 design styles, My Components studio | Written, awaiting device test |
-| 6 | Find/replace, ZIP export, more settings, polish | TODO |
+| 6 | Find/replace, ZIP export, editor settings, Admin Panel (manage, bulk actions, backup/import) | Written, awaiting device test |
 | 7+ | Device testing, signed release APK, download website | TODO |
 
 ## Editor decision
@@ -35,5 +35,5 @@ stops loading until the preview is opened again.
 
 - JavaScript console errors are not shown inside the app yet.
 - HTML files do not colour embedded `<style>` / `<script>` blocks.
-- No find/replace, word-wrap toggle or line-number toggle yet.
+- No word-wrap toggle yet (the editor scrolls sideways).
 - Components cannot be inserted into an existing project yet, only into a new one.

@@ -11,10 +11,14 @@ class CodeEditorPane extends StatelessWidget {
     super.key,
     required this.buffer,
     required this.fontSize,
+    this.showLineNumbers = true,
+    this.smartTyping = true,
   });
 
   final EditorBuffer buffer;
   final double fontSize;
+  final bool showLineNumbers;
+  final bool smartTyping;
 
   static const _symbols = [
     '<', '>', '/', '{', '}', '(', ')', '[', ']', '"', "'", ';', ':', '=', '.',
@@ -31,9 +35,10 @@ class CodeEditorPane extends StatelessWidget {
       text: text.replaceRange(start, end, value),
       selection: TextSelection.collapsed(offset: start + value.length),
     );
-    controller.value =
-        CodeEditing.autoEdit(controller.value, newValue, buffer.language) ??
-            newValue;
+    controller.value = smartTyping
+        ? (CodeEditing.autoEdit(controller.value, newValue, buffer.language) ??
+            newValue)
+        : newValue;
     buffer.focus.requestFocus();
   }
 
@@ -63,7 +68,14 @@ class CodeEditorPane extends StatelessWidget {
 
     return Column(
       children: [
-        Expanded(child: CodeEditorField(buffer: buffer, fontSize: fontSize)),
+        Expanded(
+          child: CodeEditorField(
+            buffer: buffer,
+            fontSize: fontSize,
+            showLineNumbers: showLineNumbers,
+            smartTyping: smartTyping,
+          ),
+        ),
         ListenableBuilder(
           listenable: Listenable.merge([
             buffer.controller,

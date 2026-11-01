@@ -12,10 +12,14 @@ class CodeEditorField extends StatelessWidget {
     super.key,
     required this.buffer,
     required this.fontSize,
+    this.showLineNumbers = true,
+    this.smartTyping = true,
   });
 
   final EditorBuffer buffer;
   final double fontSize;
+  final bool showLineNumbers;
+  final bool smartTyping;
 
   static double _charWidth(TextStyle style) {
     final painter = TextPainter(
@@ -59,7 +63,7 @@ class CodeEditorField extends StatelessWidget {
           if (line.length > longest) longest = line.length;
         }
         final digits = math.max(2, lines.length.toString().length);
-        final gutterWidth = digits * charWidth + 22;
+        final gutterWidth = showLineNumbers ? digits * charWidth + 22 : 0.0;
         final numbers = [for (var i = 1; i <= lines.length; i++) '$i'].join('\n');
 
         return LayoutBuilder(
@@ -76,18 +80,19 @@ class CodeEditorField extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      width: gutterWidth,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 10),
-                        child: Text(
-                          numbers,
-                          textAlign: TextAlign.right,
-                          style: gutterStyle,
-                          strutStyle: strut,
+                    if (showLineNumbers)
+                      SizedBox(
+                        width: gutterWidth,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: Text(
+                            numbers,
+                            textAlign: TextAlign.right,
+                            style: gutterStyle,
+                            strutStyle: strut,
+                          ),
                         ),
                       ),
-                    ),
                     Expanded(
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -97,7 +102,9 @@ class CodeEditorField extends StatelessWidget {
                             controller: buffer.controller,
                             focusNode: buffer.focus,
                             undoController: buffer.undo,
-                            inputFormatters: [CodeInputFormatter(buffer.language)],
+                            inputFormatters: smartTyping
+                                ? [CodeInputFormatter(buffer.language)]
+                                : const [],
                             maxLines: null,
                             keyboardType: TextInputType.multiline,
                             textInputAction: TextInputAction.newline,

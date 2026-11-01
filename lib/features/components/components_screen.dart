@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/preview/preview_source.dart';
 import '../preview/preview_screen.dart';
+import '../admin/admin_screen.dart';
 import 'component_detail_screen.dart';
 import 'component_item.dart';
 import 'component_library.dart';
@@ -54,6 +55,13 @@ class _ComponentsScreenState extends ConsumerState<ComponentsScreen> {
       appBar: AppBar(
         title: const Text('Component Library'),
         actions: [
+          IconButton(
+            tooltip: 'Admin panel',
+            icon: const Icon(Icons.admin_panel_settings_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const AdminScreen()),
+            ),
+          ),
           IconButton(
             tooltip: 'Create component',
             icon: const Icon(Icons.add_rounded),
