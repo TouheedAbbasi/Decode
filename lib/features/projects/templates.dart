@@ -47,9 +47,9 @@ class Templates {
     subtitle: 'Vanilla JS todo application',
     icon: Icons.check_circle_outline_rounded,
     files: {
-      'index.html': _todoHtml,
-      'style.css': _todoCss,
-      'script.js': _todoJs,
+      'index.html': todoHtml,
+      'style.css': todoCss,
+      'script.js': todoJs,
     },
   );
 
@@ -59,9 +59,9 @@ class Templates {
     subtitle: 'Personal portfolio template',
     icon: Icons.person_outline_rounded,
     files: {
-      'index.html': _portfolioHtml,
-      'style.css': _portfolioCss,
-      'script.js': _portfolioJs,
+      'index.html': portfolioHtml,
+      'style.css': portfolioCss,
+      'script.js': portfolioJs,
     },
   );
 
@@ -134,7 +134,7 @@ const _basicJs = r'''document.getElementById('btn').addEventListener('click', ()
 });
 ''';
 
-const _todoHtml = r'''<!DOCTYPE html>
+const todoHtml = r'''<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -156,7 +156,7 @@ const _todoHtml = r'''<!DOCTYPE html>
 </html>
 ''';
 
-const _todoCss = r'''* { box-sizing: border-box; }
+const todoCss = r'''* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -203,7 +203,7 @@ li.done span { text-decoration: line-through; opacity: 0.5; }
 li button { background: transparent; color: #b42318; padding: 0 8px; }
 ''';
 
-const _todoJs = r'''const form = document.getElementById('todo-form');
+const todoJs = r'''const form = document.getElementById('todo-form');
 const input = document.getElementById('todo-input');
 const list = document.getElementById('todo-list');
 
@@ -232,7 +232,7 @@ form.addEventListener('submit', (event) => {
 });
 ''';
 
-const _portfolioHtml = r'''<!DOCTYPE html>
+const portfolioHtml = r'''<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -278,7 +278,7 @@ const _portfolioHtml = r'''<!DOCTYPE html>
 </html>
 ''';
 
-const _portfolioCss = r'''* { box-sizing: border-box; }
+const portfolioCss = r'''* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -309,7 +309,7 @@ nav a { margin-left: 14px; color: #4f46e5; text-decoration: none; }
 .footer { color: #6b6f7b; }
 ''';
 
-const _portfolioJs = r'''document.querySelectorAll('nav a').forEach((link) => {
+const portfolioJs = r'''document.querySelectorAll('nav a').forEach((link) => {
   link.addEventListener('click', (event) => {
     event.preventDefault();
     const target = document.querySelector(link.getAttribute('href'));

@@ -9,7 +9,7 @@ Source of truth: the project brief + `docs/design_reference.png`.
 | 2 | Local storage, Projects (create/rename/duplicate/search/delete), New Project | Written, awaiting device build |
 | 3 | Editor: tabs, highlighting, autocomplete, symbol toolbar, autosave, find/replace | TODO |
 | 4 | Live preview + **Open in Chrome** (see below) | TODO |
-| 5 | Component library (offline) | TODO |
+| 5 | Component library (offline): list, search, categories, copy, use-in-new-project written. Live preview and insert-into-project wait for Phases 3-4 | Partly written |
 | 6 | Settings (editor options), ZIP export, polish | TODO |
 | 7+ | Device testing, signed release APK, download website | TODO |
 
