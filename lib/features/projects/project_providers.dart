@@ -57,17 +57,15 @@ class ProjectsNotifier extends AsyncNotifier<List<Project>> {
     await repo.delete(project);
     await _reload();
   }
+
+  Future<void> saveFile(Project project, String fileName, String text) async {
+    final repo = await _repo;
+    await repo.writeFile(project, fileName, text);
+    await _reload();
+  }
 }
 
 final projectsProvider =
     AsyncNotifierProvider<ProjectsNotifier, List<Project>>(
   ProjectsNotifier.new,
-);
-
-final projectFilesProvider =
-    FutureProvider.autoDispose.family<List<(String, int)>, Project>(
-  (ref, project) async {
-    final repo = await ref.watch(projectRepositoryProvider.future);
-    return repo.listFiles(project);
-  },
 );

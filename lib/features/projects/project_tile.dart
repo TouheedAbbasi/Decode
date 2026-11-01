@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../editor/editor_screen.dart';
 import 'project.dart';
-import 'project_files_screen.dart';
 import 'project_providers.dart';
 import 'time_format.dart';
 
@@ -43,7 +43,7 @@ class ProjectTile extends ConsumerWidget {
       ),
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => ProjectFilesScreen(project: project),
+          builder: (_) => EditorScreen(project: project),
         ),
       ),
     );

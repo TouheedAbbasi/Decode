@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import '../../core/storage/atomic_file.dart';
+
 import 'project.dart';
 import 'templates.dart';
 
@@ -129,6 +131,43 @@ class ProjectRepository {
     return files;
   }
 
+  static const editableExtensions = {
+    '.html',
+    '.htm',
+    '.css',
+    '.js',
+    '.mjs',
+    '.json',
+    '.txt',
+    '.md',
+    '.svg',
+  };
+
+  Future<String> readFile(Project project, String fileName) =>
+      File(p.join(project.path, _safeFileName(fileName))).readAsString();
+
+  /// Saves one file and bumps the project's modified time.
+  Future<void> writeFile(
+    Project project,
+    String fileName,
+    String content,
+  ) async {
+    final name = _safeFileName(fileName);
+    await _writeAtomic(File(p.join(project.path, name)), content);
+    await _writeMeta(project.copyWith(modifiedAt: DateTime.now()));
+  }
+
+  /// Only plain file names are accepted: no folders, no hidden files.
+  String _safeFileName(String name) {
+    if (name.isEmpty ||
+        name != p.basename(name) ||
+        name.startsWith('.') ||
+        name.contains(r'\')) {
+      throw ArgumentError.value(name, 'fileName', 'Invalid file name');
+    }
+    return name;
+  }
+
   Future<String> _newId() async {
     var id = DateTime.now().microsecondsSinceEpoch.toString();
     var n = 0;
@@ -144,11 +183,6 @@ class ProjectRepository {
         jsonEncode(project.toJson()),
       );
 
-  /// Write to a temp file, then rename, so a crash can never leave a
-  /// half-written file behind.
-  Future<void> _writeAtomic(File file, String content) async {
-    final tmp = File('${file.path}.tmp');
-    await tmp.writeAsString(content, flush: true);
-    await tmp.rename(file.path);
-  }
+  Future<void> _writeAtomic(File file, String content) =>
+      writeFileAtomic(file, content);
 }

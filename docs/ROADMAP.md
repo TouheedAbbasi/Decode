@@ -1,33 +1,39 @@
 # Decode - Roadmap
 
 Source of truth: the project brief + `docs/design_reference.png`.
+Nothing below is marked done until it has been built and tried on a device.
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| 0 | Editor spike (CodeMirror 6 in WebView vs native Flutter editor) on real devices | TODO |
-| 1 | Flutter project, navigation, light/dark/system theme | Written, awaiting device build |
-| 2 | Local storage, Projects (create/rename/duplicate/search/delete), New Project | Written, awaiting device build |
-| 3 | Editor: tabs, highlighting, autocomplete, symbol toolbar, autosave, find/replace | TODO |
-| 4 | Live preview + **Open in Chrome** (see below) | TODO |
-| 5 | Component library (offline): list, search, categories, copy, use-in-new-project written. Live preview and insert-into-project wait for Phases 3-4 | Partly written |
-| 6 | Settings (editor options), ZIP export, polish | TODO |
+| 0 | Editor spike (CodeMirror vs native) | Skipped: a native Flutter editor was written instead (see below) |
+| 1 | Navigation, light/dark/system theme | Written, awaiting device test |
+| 2 | Local projects: create/rename/duplicate/search/delete | Written, awaiting device test |
+| 3 | Editor: tabs, highlighting, autocomplete, symbols, undo/redo, save + autosave | Written, awaiting device test |
+| 4 | Live preview (WebView), Open in Chrome, quick preview | Written, awaiting device test |
+| 5 | Component library: 11 basics, 6 design styles, My Components studio | Written, awaiting device test |
+| 6 | Find/replace, ZIP export, more settings, polish | TODO |
 | 7+ | Device testing, signed release APK, download website | TODO |
 
-## Added requirement: open the preview in Chrome
+## Editor decision
 
-From the Preview screen a button must open the current project in Chrome.
+A native Flutter editor (TextField + custom highlighter, auto-close, autocomplete
+bar, symbol toolbar) was chosen over CodeMirror-in-WebView, because Android
+keyboard composing inside a WebView is the biggest risk in the brief and could
+not be tested here. If the native editor feels weak on a real phone, CodeMirror
+can still be tried as a replacement behind `CodeEditorPane`.
 
-Plan:
-1. Phase 4 starts a tiny HTTP server bound to `127.0.0.1` on a random port that
-   serves the project folder (also used by the in-app WebView, so relative
-   paths like `style.css` work the same in both).
-2. "Open in Chrome" launches `http://127.0.0.1:<port>/index.html` with an
-   Android intent targeting `com.android.chrome`, falling back to the default
-   browser if Chrome is not installed.
-3. Needs `INTERNET` permission and a network-security config allowing cleartext
-   traffic to `127.0.0.1` only.
+## Preview and Chrome
 
-Known limitation: the server lives only while Decode is running. If Android
-kills the app in the background, the Chrome tab stops loading until Decode is
-reopened. `file://` URLs are not an option because Chrome cannot read an app's
-private storage.
+A loopback-only (127.0.0.1) HTTP server serves the project folder, so relative
+paths work in both the in-app WebView and Chrome. "Open in Chrome" uses an
+Android intent for `com.android.chrome` and falls back to the default browser.
+The server lives only while the preview screen is open, and Chrome needs Decode
+to stay alive: if Android kills the app in the background, the Chrome tab
+stops loading until the preview is opened again.
+
+## Known gaps
+
+- JavaScript console errors are not shown inside the app yet.
+- HTML files do not colour embedded `<style>` / `<script>` blocks.
+- No find/replace, word-wrap toggle or line-number toggle yet.
+- Components cannot be inserted into an existing project yet, only into a new one.

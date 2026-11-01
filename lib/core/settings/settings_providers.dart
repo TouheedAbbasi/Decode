@@ -27,3 +27,23 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
 
 final themeModeProvider =
     NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);
+
+class EditorFontSizeNotifier extends Notifier<double> {
+  static const _key = 'editor_font_size';
+  static const min = 11.0;
+  static const max = 22.0;
+
+  @override
+  double build() {
+    final saved = ref.watch(sharedPrefsProvider).getDouble(_key);
+    return (saved ?? 14).clamp(min, max).toDouble();
+  }
+
+  Future<void> set(double size) async {
+    state = size.clamp(min, max).toDouble();
+    await ref.read(sharedPrefsProvider).setDouble(_key, state);
+  }
+}
+
+final editorFontSizeProvider =
+    NotifierProvider<EditorFontSizeNotifier, double>(EditorFontSizeNotifier.new);

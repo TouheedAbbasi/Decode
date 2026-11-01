@@ -71,4 +71,19 @@ void main() {
     final files = await repo.listFiles(project);
     expect(files.map((f) => f.$1), ['index.html']);
   });
+
+  test('writeFile saves content and rejects unsafe names', () async {
+    final project = await repo.create(name: 'X', template: Templates.htmlCssJs);
+    await repo.writeFile(project, 'script.js', 'console.log(1);');
+    expect(await repo.readFile(project, 'script.js'), 'console.log(1);');
+
+    expect(
+      () => repo.writeFile(project, '../evil.js', 'x'),
+      throwsArgumentError,
+    );
+    expect(
+      () => repo.writeFile(project, '.decode.json', 'x'),
+      throwsArgumentError,
+    );
+  });
 }
