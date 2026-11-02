@@ -8,6 +8,8 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/export/zip_export.dart';
 import '../editor/editor_screen.dart';
+import '../editor/workspace.dart';
+import 'project_repository.dart';
 import 'project.dart';
 import 'project_providers.dart';
 import 'time_format.dart';
@@ -53,7 +55,15 @@ class ProjectTile extends ConsumerWidget {
       ),
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => EditorScreen(project: project),
+          builder: (_) => EditorScreen(
+            workspace: DirectoryWorkspace(
+              rootPath: project.path,
+              title: project.name,
+              hiddenNames: const {ProjectRepository.metaFileName},
+              onSaved: () =>
+                  ref.read(projectsProvider.notifier).touch(project),
+            ),
+          ),
         ),
       ),
     );

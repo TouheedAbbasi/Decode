@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'code_actions.dart';
 import 'code_editing.dart';
 import 'code_editor_field.dart';
 import 'editor_buffer.dart';
-import 'suggester.dart';
 
-/// The editor, an autocomplete bar and the coding-symbol toolbar.
+/// The editor plus the coding-symbol toolbar. Suggestions are drawn inside
+/// the editor itself (see [CodeEditorField]).
 class CodeEditorPane extends StatelessWidget {
   const CodeEditorPane({
     super.key,
@@ -36,29 +37,27 @@ class CodeEditorPane extends StatelessWidget {
       selection: TextSelection.collapsed(offset: start + value.length),
     );
     controller.value = smartTyping
-        ? (CodeEditing.autoEdit(controller.value, newValue, buffer.language) ??
+        ? (CodeEditing.smartEdit(controller.value, newValue, buffer.language) ??
             newValue)
         : newValue;
     buffer.focus.requestFocus();
   }
 
-  void _apply(SuggestionResult result, Suggestion suggestion) {
+  void _indent({required bool outdent}) {
     final controller = buffer.controller;
-    final text = controller.text;
-    final cursor = controller.selection.start;
-    final newText = text.replaceRange(
-      result.replaceStart,
-      cursor,
-      suggestion.insert,
-    );
-    controller.value = TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(
-        offset: result.replaceStart +
-            suggestion.insert.length -
-            suggestion.caretBack,
-      ),
-    );
+    final selection = controller.selection;
+    if (!outdent && selection.isValid && selection.isCollapsed) {
+      _insert('  ');
+      return;
+    }
+    controller.value = CodeActions.indent(controller.value, outdent: outdent);
+    buffer.focus.requestFocus();
+  }
+
+  void _comment() {
+    final controller = buffer.controller;
+    controller.value =
+        CodeActions.toggleComment(controller.value, buffer.language);
     buffer.focus.requestFocus();
   }
 
@@ -77,70 +76,10 @@ class CodeEditorPane extends StatelessWidget {
           ),
         ),
         ListenableBuilder(
-          listenable: Listenable.merge([
-            buffer.controller,
-            buffer.focus,
-            buffer.undo,
-          ]),
-          builder: (context, _) {
-            final selection = buffer.controller.selection;
-            SuggestionResult? result;
-            if (buffer.focus.hasFocus &&
-                selection.isValid &&
-                selection.isCollapsed) {
-              result = Suggester.suggest(
-                buffer.controller.text,
-                selection.start,
-                buffer.language,
-              );
-            }
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (result != null) _suggestionBar(result, scheme),
-                _toolbar(scheme),
-              ],
-            );
-          },
+          listenable: buffer.undo,
+          builder: (context, _) => _toolbar(scheme),
         ),
       ],
-    );
-  }
-
-  Widget _suggestionBar(SuggestionResult result, ColorScheme scheme) {
-    return Container(
-      height: 40,
-      decoration: BoxDecoration(
-        color: scheme.primaryContainer,
-        border: Border(top: BorderSide(color: scheme.outline)),
-      ),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        itemCount: result.items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 6),
-        itemBuilder: (_, i) {
-          final item = result.items[i];
-          return InkWell(
-            canRequestFocus: false,
-            borderRadius: BorderRadius.circular(6),
-            onTap: () => _apply(result, item),
-            child: Container(
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: BoxDecoration(
-                color: scheme.surface,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: scheme.outline),
-              ),
-              child: Text(
-                item.label,
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 
@@ -165,7 +104,19 @@ class CodeEditorPane extends StatelessWidget {
             buffer.undo.value.canRedo ? buffer.undo.redo : null,
             scheme,
           ),
-          _textKey('Tab', () => _insert('  '), scheme),
+          _iconKey(
+            Icons.format_indent_increase_rounded,
+            'Indent',
+            () => _indent(outdent: false),
+            scheme,
+          ),
+          _iconKey(
+            Icons.format_indent_decrease_rounded,
+            'Outdent',
+            () => _indent(outdent: true),
+            scheme,
+          ),
+          _textKey('//', _comment, scheme),
           Expanded(
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
@@ -191,7 +142,7 @@ class CodeEditorPane extends StatelessWidget {
       child: Tooltip(
         message: tooltip,
         child: SizedBox(
-          width: 42,
+          width: 40,
           height: 46,
           child: Icon(
             icon,

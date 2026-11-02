@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shell/main_shell.dart';
+import '../device/device_files.dart';
 import '../projects/new_project_screen.dart';
 import '../projects/project_providers.dart';
 import '../projects/project_tile.dart';
@@ -62,6 +63,12 @@ class HomeScreen extends ConsumerWidget {
             onPressed: () => openNewProject(context),
             icon: const Icon(Icons.add_rounded),
             label: const Text('New Project'),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: () => pickFromDevice(context),
+            icon: const Icon(Icons.folder_open_outlined),
+            label: const Text('Open from device'),
           ),
           const SizedBox(height: 28),
           Row(

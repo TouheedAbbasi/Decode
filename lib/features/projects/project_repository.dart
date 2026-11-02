@@ -131,6 +131,10 @@ class ProjectRepository {
     return files;
   }
 
+  /// Marks a project as just modified (used after the editor saves a file).
+  Future<void> touch(Project project) =>
+      _writeMeta(project.copyWith(modifiedAt: DateTime.now()));
+
   static const editableExtensions = {
     '.html',
     '.htm',

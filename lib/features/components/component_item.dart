@@ -13,6 +13,8 @@ class ComponentItem {
     this.css = '',
     this.js = '',
     this.isUser = false,
+    this.isRemote = false,
+    this.updatedAt,
   });
 
   final String id;
@@ -28,6 +30,17 @@ class ComponentItem {
 
   /// True for components the user made in the studio.
   final bool isUser;
+
+  /// True for components published online (Supabase).
+  final bool isRemote;
+
+  /// When it was last published or changed (online components only).
+  final DateTime? updatedAt;
+
+  /// Published within the last 7 days.
+  bool get isNew =>
+      updatedAt != null &&
+      DateTime.now().difference(updatedAt!) < const Duration(days: 7);
 
   /// Complete, linked project files built from this component.
   Map<String, String> toFiles() {
@@ -60,6 +73,7 @@ class ComponentItem {
     String? css,
     String? js,
     bool? isUser,
+    bool? isRemote,
     IconData? icon,
   }) =>
       ComponentItem(
@@ -72,6 +86,8 @@ class ComponentItem {
         css: css ?? this.css,
         js: js ?? this.js,
         isUser: isUser ?? this.isUser,
+        isRemote: isRemote ?? this.isRemote,
+        updatedAt: updatedAt,
       );
 
   Map<String, dynamic> toJson() => {
@@ -95,6 +111,54 @@ class ComponentItem {
         js: (json['js'] as String?) ?? '',
         isUser: true,
       );
+
+  /// Everything in one ready-to-save HTML document (CSS and JS inlined).
+  String toSingleFile() {
+    String indented(String code) =>
+        code.trimRight().split('\n').map((l) => l.isEmpty ? l : '    $l').join('\n');
+    final style = css.trim().isEmpty ? '' : '  <style>\n${indented(css)}\n  </style>\n';
+    final script = js.trim().isEmpty ? '' : '  <script>\n${indented(js)}\n  </script>\n';
+    return '<!DOCTYPE html>\n'
+        '<html lang="en">\n'
+        '<head>\n'
+        '  <meta charset="UTF-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+        '  <title>$name</title>\n'
+        '$style'
+        '</head>\n'
+        '<body>\n'
+        '$html\n'
+        '$script'
+        '</body>\n'
+        '</html>\n';
+  }
+
+  /// Builds a component from a row of the online `components` table.
+  /// Returns null for rows that are incomplete.
+  static ComponentItem? tryFromRemote(
+    Map<String, dynamic> row, {
+    required List<String> categories,
+  }) {
+    String str(Object? value) => value is String ? value : '';
+    final id = str(row['id']);
+    final name = str(row['name']).trim();
+    final html = str(row['html']);
+    if (id.isEmpty || name.isEmpty || html.trim().isEmpty) return null;
+    var category = str(row['category']);
+    if (!categories.contains(category)) category = 'UI';
+    return ComponentItem(
+      id: id,
+      name: name,
+      description: str(row['description']).trim(),
+      category: category,
+      icon: Icons.cloud_outlined,
+      html: html,
+      css: str(row['css']),
+      js: str(row['js']),
+      isRemote: true,
+      updatedAt: DateTime.tryParse(str(row['updated_at'])),
+    );
+  }
 
   ProjectTemplate toTemplate() => ProjectTemplate(
         id: 'component_$id',

@@ -1,13 +1,25 @@
 import 'code_language.dart';
 
+/// Marks where the caret lands after a snippet is inserted.
+const caretMarker = '\u0001';
+
+const _c = caretMarker;
+
 class Suggestion {
-  const Suggestion(this.label, this.insert, {this.caretBack = 0});
+  const Suggestion(this.label, this.template);
 
+  /// What the user types to find it, for example `article`.
   final String label;
-  final String insert;
 
-  /// How many characters to move the caret back after inserting.
-  final int caretBack;
+  /// What gets inserted. May contain [caretMarker] and line breaks.
+  final String template;
+
+  /// One-line preview of the insertion.
+  String get preview {
+    final clean = template.replaceAll(caretMarker, '');
+    final lines = clean.split('\n');
+    return lines.length > 1 ? '${lines.first.trim()} ...' : clean;
+  }
 }
 
 class SuggestionResult {
@@ -15,15 +27,16 @@ class SuggestionResult {
 
   final List<Suggestion> items;
 
-  /// Index where the typed prefix starts.
+  /// Index where the typed text starts (includes a leading `<`).
   final int replaceStart;
 }
 
-/// Lightweight, context-aware autocomplete for HTML, CSS and JavaScript.
+/// VS Code style suggestions and snippets for HTML, CSS and JavaScript.
 class Suggester {
   Suggester._();
 
   static final _wordChar = RegExp(r'[\w-]');
+  static const maxItems = 6;
 
   static SuggestionResult? suggest(
     String text,
@@ -31,6 +44,8 @@ class Suggester {
     CodeLanguage language,
   ) {
     if (cursor <= 0 || cursor > text.length) return null;
+    final lang = effectiveLanguage(text, cursor, language);
+    if (lang == CodeLanguage.text) return null;
 
     var start = cursor;
     while (start > 0 && _wordChar.hasMatch(text[start - 1])) {
@@ -41,66 +56,115 @@ class Suggester {
     final prev = start > 0 ? text[start - 1] : '';
     final before = text.substring(0, start);
 
-    List<Suggestion> candidates;
-    switch (language) {
+    var replaceStart = start;
+    var minLength = 2;
+    var allowExact = false;
+    final List<Suggestion> candidates;
+
+    switch (lang) {
       case CodeLanguage.html:
+        final insideTag = before.lastIndexOf('<') > before.lastIndexOf('>');
         if (prev == '<') {
-          candidates = [for (final t in _htmlTags) Suggestion(t, t)];
-        } else if (before.lastIndexOf('<') > before.lastIndexOf('>') &&
-            prev.trim().isEmpty) {
-          candidates = [
-            for (final a in _htmlAttributes)
-              Suggestion(a, '$a=""', caretBack: 1),
-          ];
+          candidates = _htmlSnippets;
+          replaceStart = start - 1;
+          minLength = 1;
+          allowExact = true;
+        } else if (insideTag) {
+          if (prev.trim().isNotEmpty) return null;
+          candidates = _htmlAttributes;
+          minLength = 1;
         } else {
-          return null;
+          candidates = _htmlSnippets;
+          allowExact = true;
         }
       case CodeLanguage.css:
-        if (prefix.length < 2) return null;
+        if (before.lastIndexOf('{') <= before.lastIndexOf('}')) return null;
         final boundary = [
           before.lastIndexOf('{'),
           before.lastIndexOf(';'),
           before.lastIndexOf('}'),
         ].reduce((a, b) => a > b ? a : b);
-        final segment = before.substring(boundary + 1);
-        if (segment.contains(':')) {
-          candidates = [for (final v in _cssValues) Suggestion(v, v)];
-        } else {
-          candidates = [for (final p in _cssProperties) Suggestion(p, '$p: ')];
-        }
+        candidates = before.substring(boundary + 1).contains(':')
+            ? _cssValues
+            : _cssProperties;
       case CodeLanguage.js:
-        if (prefix.length < 2) return null;
-        final words = prev == '.' ? _jsMembers : _jsWords;
-        candidates = [for (final w in words) Suggestion(w, w)];
+        candidates = prev == '.' ? _jsMembers : _jsWords;
       case CodeLanguage.text:
         return null;
     }
 
+    if (prefix.length < minLength) return null;
     final lower = prefix.toLowerCase();
-    final items = candidates
-        .where((s) => s.label.startsWith(lower) && s.label != prefix)
-        .take(8)
-        .toList();
-    if (items.isEmpty) return null;
-    return SuggestionResult(items, start);
+    final matches = candidates
+        .where(
+          (s) =>
+              s.label.toLowerCase().startsWith(lower) &&
+              (allowExact || s.label != prefix),
+        )
+        .toList()
+      ..sort((a, b) {
+        final byLength = a.label.length.compareTo(b.label.length);
+        return byLength != 0 ? byLength : a.label.compareTo(b.label);
+      });
+    if (matches.isEmpty) return null;
+    return SuggestionResult(matches.take(maxItems).toList(), replaceStart);
   }
 }
 
-const _htmlTags = [
-  'a', 'article', 'aside', 'body', 'br', 'button', 'canvas', 'div', 'footer',
-  'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hr', 'html',
-  'img', 'input', 'label', 'li', 'link', 'main', 'meta', 'nav', 'ol', 'option',
-  'p', 'script', 'section', 'select', 'span', 'style', 'table', 'td', 'textarea',
-  'th', 'title', 'tr', 'ul', 'video', //
+// -------------------------------------------------------------------- HTML
+
+const _plainTags = [
+  'article', 'aside', 'audio', 'body', 'canvas', 'div', 'em', 'footer',
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'html', 'i', 'li',
+  'main', 'nav', 'option', 'p', 'pre', 'section', 'small', 'span', 'strong',
+  'style', 'textarea', 'th', 'td', 'title', 'tr', 'video', //
 ];
 
-const _htmlAttributes = [
+final List<Suggestion> _htmlSnippets = _buildHtmlSnippets();
+
+List<Suggestion> _buildHtmlSnippets() {
+  final special = <String, String>{
+    'a': '<a href="$_c"></a>',
+    'img': '<img src="$_c" alt="">',
+    'input': '<input type="$_c">',
+    'link': '<link rel="stylesheet" href="$_c">',
+    'meta': '<meta name="$_c" content="">',
+    'script': '<script src="$_c"></script>',
+    'br': '<br>',
+    'hr': '<hr>',
+    'button': '<button type="button">$_c</button>',
+    'label': '<label for="">$_c</label>',
+    'ul': '<ul>\n  <li>$_c</li>\n</ul>',
+    'ol': '<ol>\n  <li>$_c</li>\n</ol>',
+    'select': '<select>\n  <option value="">$_c</option>\n</select>',
+    'table': '<table>\n  <tr>\n    <td>$_c</td>\n  </tr>\n</table>',
+    'form': '<form action="">\n  $_c\n</form>',
+    'html5': '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+        '  <meta charset="UTF-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+        '  <title>$_c</title>\n'
+        '</head>\n<body>\n  \n</body>\n</html>',
+  };
+  return [
+    for (final tag in _plainTags)
+      if (!special.containsKey(tag)) Suggestion(tag, '<$tag>$_c</$tag>'),
+    for (final entry in special.entries) Suggestion(entry.key, entry.value),
+  ];
+}
+
+const _attributeNames = [
   'alt', 'autocomplete', 'charset', 'class', 'content', 'disabled', 'for',
   'height', 'href', 'id', 'lang', 'name', 'onclick', 'placeholder', 'rel',
   'required', 'src', 'style', 'target', 'title', 'type', 'value', 'width', //
 ];
 
-const _cssProperties = [
+final List<Suggestion> _htmlAttributes = [
+  for (final a in _attributeNames) Suggestion(a, '$a="$_c"'),
+];
+
+// --------------------------------------------------------------------- CSS
+
+const _cssPropertyNames = [
   'align-items', 'animation', 'background', 'background-color', 'border',
   'border-radius', 'bottom', 'box-shadow', 'box-sizing', 'color', 'cursor',
   'display', 'flex', 'flex-direction', 'flex-wrap', 'font-family', 'font-size',
@@ -111,25 +175,65 @@ const _cssProperties = [
   'text-decoration', 'top', 'transform', 'transition', 'width', 'z-index', //
 ];
 
-const _cssValues = [
-  'absolute', 'auto', 'block', 'bold', 'center', 'column', 'fixed', 'flex',
-  'grid', 'hidden', 'inherit', 'inline-block', 'none', 'normal', 'pointer',
-  'relative', 'row', 'solid', 'space-between', 'sticky', 'transparent',
-  'underline', 'white', 'wrap', //
+final List<Suggestion> _cssProperties = [
+  for (final p in _cssPropertyNames) Suggestion(p, '$p: $_c;'),
+  const Suggestion(
+    'flexcenter',
+    'display: flex;\n  align-items: center;\n  justify-content: center;',
+  ),
+  const Suggestion(
+    'gridcols',
+    'display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 16px;',
+  ),
+  const Suggestion('shadow', 'box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);'),
 ];
 
-const _jsWords = [
-  'addEventListener', 'alert', 'async', 'await', 'break', 'catch', 'class',
-  'const', 'console', 'continue', 'document', 'else', 'false', 'finally',
-  'for', 'function', 'if', 'import', 'let', 'localStorage', 'null', 'return',
-  'setInterval', 'setTimeout', 'switch', 'this', 'throw', 'true', 'try',
-  'undefined', 'var', 'while', 'window', //
+final List<Suggestion> _cssValues = [
+  for (final v in const [
+    'absolute', 'auto', 'block', 'bold', 'center', 'column', 'fixed', 'flex',
+    'grid', 'hidden', 'inherit', 'inline-block', 'none', 'normal', 'pointer',
+    'relative', 'row', 'solid', 'space-between', 'sticky', 'transparent',
+    'underline', 'white', 'wrap', //
+  ])
+    Suggestion(v, v),
 ];
 
-const _jsMembers = [
-  'addEventListener', 'appendChild', 'children', 'classList', 'click',
-  'createElement', 'getElementById', 'innerHTML', 'innerText', 'length', 'log',
-  'map', 'parentElement', 'push', 'querySelector', 'querySelectorAll',
-  'remove', 'removeEventListener', 'setAttribute', 'style', 'textContent',
-  'toggle', 'value', //
+// -------------------------------------------------------------- JavaScript
+
+final List<Suggestion> _jsWords = [
+  for (final w in const [
+    'addEventListener', 'alert', 'async', 'await', 'break', 'catch', 'class',
+    'const', 'console', 'continue', 'document', 'else', 'false', 'finally',
+    'function', 'import', 'let', 'localStorage', 'null', 'return',
+    'setInterval', 'switch', 'this', 'throw', 'true', 'try', 'undefined',
+    'var', 'while', 'window', //
+  ])
+    Suggestion(w, w),
+  const Suggestion('log', 'console.log($_c);'),
+  const Suggestion('for', 'for (let i = 0; i < $_c; i++) {\n  \n}'),
+  const Suggestion('foreach', '$_c.forEach((item) => {\n  \n});'),
+  const Suggestion('fn', 'function $_c() {\n  \n}'),
+  const Suggestion('arrow', 'const $_c = () => {\n  \n};'),
+  const Suggestion('if', 'if ($_c) {\n  \n}'),
+  const Suggestion('ifelse', 'if ($_c) {\n  \n} else {\n  \n}'),
+  const Suggestion('qs', "document.querySelector('$_c')"),
+  const Suggestion('qsa', "document.querySelectorAll('$_c')"),
+  const Suggestion('gid', "document.getElementById('$_c')"),
+  const Suggestion('ael', "$_c.addEventListener('click', () => {\n  \n});"),
+  const Suggestion('timeout', 'setTimeout(() => {\n  $_c\n}, 1000);'),
+  const Suggestion(
+    'fetch',
+    "fetch('$_c')\n  .then((res) => res.json())\n  .then((data) => {\n    console.log(data);\n  });",
+  ),
+];
+
+final List<Suggestion> _jsMembers = [
+  for (final m in const [
+    'addEventListener', 'appendChild', 'children', 'classList', 'click',
+    'createElement', 'getElementById', 'innerHTML', 'innerText', 'length',
+    'log', 'map', 'parentElement', 'push', 'querySelector',
+    'querySelectorAll', 'remove', 'removeEventListener', 'setAttribute',
+    'style', 'textContent', 'toggle', 'value', //
+  ])
+    Suggestion(m, m),
 ];

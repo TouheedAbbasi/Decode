@@ -4,9 +4,11 @@ import '../projects/templates.dart';
 import 'component_item.dart';
 import 'component_styles.dart';
 
-/// Chips shown in the library. 'All' and 'My Components' are virtual.
+/// Chips shown in the library. 'All', 'Online' and 'My Components' are
+/// virtual: they filter by where a component comes from.
 const componentCategories = [
   'All',
+  'Online',
   'My Components',
   'Forms',
   'Navigation',
@@ -22,7 +24,7 @@ const componentCategories = [
 
 /// Categories a user component can be filed under.
 final userCategories = componentCategories
-    .where((c) => c != 'All' && c != 'My Components')
+    .where((c) => c != 'All' && c != 'Online' && c != 'My Components')
     .toList();
 
 /// Built-in components: the basics plus the design-style sets.

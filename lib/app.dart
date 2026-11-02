@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/settings/settings_providers.dart';
 import 'core/theme/app_theme.dart';
+import 'features/splash/splash_screen.dart';
 import 'shell/main_shell.dart';
 
 class DecodeApp extends ConsumerWidget {
@@ -17,7 +18,7 @@ class DecodeApp extends ConsumerWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: mode,
-      home: const MainShell(),
+      home: const SplashGate(child: MainShell()),
     );
   }
 }

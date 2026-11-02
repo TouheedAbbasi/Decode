@@ -57,17 +57,17 @@ class _ComponentStudioScreenState extends ConsumerState<ComponentStudioScreen> {
         ? initial.category
         : 'UI';
     _html = EditorBuffer(
-      name: 'index.html',
+      path: 'index.html',
       text: initial?.html ?? '',
       language: CodeLanguage.html,
     );
     _css = EditorBuffer(
-      name: 'style.css',
+      path: 'style.css',
       text: initial?.css ?? '',
       language: CodeLanguage.css,
     );
     _js = EditorBuffer(
-      name: 'script.js',
+      path: 'script.js',
       text: initial?.js ?? '',
       language: CodeLanguage.js,
     );

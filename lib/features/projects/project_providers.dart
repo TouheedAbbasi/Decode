@@ -58,6 +58,12 @@ class ProjectsNotifier extends AsyncNotifier<List<Project>> {
     await _reload();
   }
 
+  Future<void> touch(Project project) async {
+    final repo = await _repo;
+    await repo.touch(project);
+    await _reload();
+  }
+
   Future<void> saveFile(Project project, String fileName, String text) async {
     final repo = await _repo;
     await repo.writeFile(project, fileName, text);

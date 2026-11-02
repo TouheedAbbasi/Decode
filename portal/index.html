@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Decode Portal</title>
+<style>
+  :root {
+    --bg: #fafaf8; --surface: #ffffff; --border: #e6e6e1; --text: #1b1c20;
+    --muted: #6b6f7b; --accent: #4f46e5; --accent-soft: #eeedfc; --danger: #d92d20;
+    --ok: #067647; --code-bg: #fbfbfa;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1015; --surface: #161922; --border: #262a36; --text: #e9eaef;
+      --muted: #8d93a5; --accent: #7168f7; --accent-soft: #23254a; --danger: #f97066;
+      --ok: #47cd89; --code-bg: #0b0d12;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .hidden { display: none !important; }
+
+  header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  header h1 { font-size: 17px; margin: 0; flex: 1; }
+  header .who { color: var(--muted); font-size: 13px; }
+
+  .btn { padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-weight: 600; font-size: 14px; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.danger { color: var(--danger); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  input[type=text], input[type=email], input[type=password], select, textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+  }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 12px 0 6px; }
+
+  /* login */
+  #login { max-width: 360px; margin: 12vh auto 0; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+  #login h2 { margin: 0 0 4px; }
+  #login p { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+  #login .btn { width: 100%; margin-top: 18px; }
+
+  /* app layout */
+  #app { display: grid; grid-template-columns: 320px 1fr; height: calc(100% - 55px); }
+  #list { border-right: 1px solid var(--border); overflow: auto; background: var(--surface); }
+  #list .tools { padding: 12px; display: flex; gap: 8px; position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .item { padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .item:hover { background: var(--accent-soft); }
+  .item.active { background: var(--accent-soft); }
+  .item .name { font-weight: 600; font-size: 14px; }
+  .item .meta { font-size: 12px; color: var(--muted); margin-top: 2px; display: flex; gap: 8px; align-items: center; }
+  .badge { font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); }
+  .badge.pub { color: var(--ok); border-color: var(--ok); }
+
+  #editor { overflow: auto; padding: 16px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  .check input { width: auto; }
+  .tabs { display: flex; gap: 4px; margin-top: 16px; border-bottom: 1px solid var(--border); }
+  .tab { padding: 8px 16px; cursor: pointer; border: 0; background: none; border-bottom: 2px solid transparent; font-weight: 600; color: var(--muted); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  textarea.code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; line-height: 1.5; min-height: 240px; resize: vertical; background: var(--code-bg); tab-size: 2; white-space: pre; overflow: auto; border-top-left-radius: 0; border-top-right-radius: 0; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .preview-title { margin: 20px 0 8px; font-size: 13px; font-weight: 700; color: var(--muted); }
+  iframe { width: 100%; height: 360px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+  .empty { color: var(--muted); text-align: center; padding: 60px 20px; }
+
+  #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 14px; max-width: 90vw; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  #toast.show { opacity: 1; }
+
+  @media (max-width: 800px) {
+    #app { grid-template-columns: 1fr; height: auto; }
+    #list { max-height: 36vh; border-right: 0; border-bottom: 1px solid var(--border); }
+    .row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Decode Portal</h1>
+  <span class="who" id="who"></span>
+  <button class="btn hidden" id="logout">Log out</button>
+</header>
+
+<!-- ============================ LOGIN ============================ -->
+<section id="login">
+  <h2>Admin login</h2>
+  <p>Only the admin account can publish components.</p>
+  <label for="email">Email</label>
+  <input id="email" type="email" autocomplete="username">
+  <label for="password">Password</label>
+  <input id="password" type="password" autocomplete="current-password">
+  <button class="btn primary" id="loginBtn">Log in</button>
+  <p id="loginError" style="color: var(--danger); margin-top: 12px;"></p>
+</section>
+
+<!-- ============================== APP ============================== -->
+<main id="app" class="hidden">
+  <aside id="list">
+    <div class="tools">
+      <input type="text" id="search" placeholder="Search...">
+      <button class="btn primary" id="newBtn">New</button>
+    </div>
+    <div id="items"></div>
+  </aside>
+
+  <section id="editor">
+    <div id="editorEmpty" class="empty">Pick a component on the left, or press <b>New</b>.</div>
+
+    <div id="editorForm" class="hidden">
+      <div class="row">
+        <div>
+          <label for="name">Name</label>
+          <input id="name" type="text" maxlength="50" placeholder="Glass Login Card">
+        </div>
+        <div>
+          <label for="category">Category</label>
+          <select id="category"></select>
+        </div>
+      </div>
+      <label for="description">Short description</label>
+      <input id="description" type="text" maxlength="100" placeholder="One line about it">
+      <label class="check"><input type="checkbox" id="published" checked> Published (visible in the app)</label>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="html">HTML</button>
+        <button class="tab" data-tab="css">CSS</button>
+        <button class="tab" data-tab="js">JS</button>
+      </div>
+      <textarea class="code" id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+
+      <div class="actions">
+        <button class="btn primary" id="saveBtn">Save &amp; publish</button>
+        <button class="btn" id="dupBtn">Duplicate</button>
+        <button class="btn danger" id="delBtn">Delete</button>
+      </div>
+
+      <div class="preview-title">Live preview</div>
+      <iframe id="preview" sandbox="allow-scripts" title="Preview"></iframe>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* ------------------------------------------------------------------
+   Public connection values. The publishable key is meant to be public;
+   data is protected by Row Level Security + the admin login.
+   NEVER paste a "secret" / "service_role" key here.
+------------------------------------------------------------------- */
+const SUPABASE_URL = 'https://khuxfcikhugzylckqfny.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_sOG-7fbHdU6AipliJh6WDg_4D_hq486';
+
+const CATEGORIES = ['Forms', 'Navigation', 'UI', 'Templates', 'Neumorphism',
+  'Glassmorphism', 'Minimal', 'Gradient', 'Dark UI', 'Brutalism'];
+
+const $ = (id) => document.getElementById(id);
+const REST = SUPABASE_URL + '/rest/v1/components';
+
+let session = null;          // { access_token, refresh_token, expires_at, email }
+let rows = [];               // all components (admin sees drafts too)
+let current = null;          // component being edited
+let tab = 'html';
+let previewTimer = null;
+
+/* ----------------------------- helpers ----------------------------- */
+function toast(message) {
+  const el = $('toast');
+  el.textContent = message;
+  el.classList.add('show');
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+function newId() {
+  return 'c_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function apiHeaders(extra) {
+  const headers = { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' };
+  if (session) headers.Authorization = 'Bearer ' + session.access_token;
+  else if (SUPABASE_KEY.startsWith('eyJ')) headers.Authorization = 'Bearer ' + SUPABASE_KEY;
+  return Object.assign(headers, extra || {});
+}
+
+async function readError(response, fallback) {
+  try {
+    const body = await response.json();
+    return body.message || body.msg || body.error_description || body.error || fallback;
+  } catch (_) {
+    return fallback + ' (' + response.status + ')';
+  }
+}
+
+/* ------------------------------ auth ------------------------------- */
+function storeSession(data, email) {
+  session = {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_at: Date.now() + (data.expires_in || 3600) * 1000,
+    email: (data.user && data.user.email) || email,
+  };
+  sessionStorage.setItem('decode_portal_session', JSON.stringify(session));
+}
+
+async function ensureFreshSession() {
+  if (!session) throw new Error('Please log in.');
+  if (Date.now() < session.expires_at - 60000) return;
+  const response = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+    method: 'POST',
+    headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: session.refresh_token }),
+  });
+  if (!response.ok) { logout(); throw new Error('Session expired. Please log in again.'); }
+  storeSession(await response.json(), session.email);
+}
+
+async function login() {
+  $('loginError').textContent = '';
+  const email = $('email').value.trim();
+  const password = $('password').value;
+  if (!email || !password) { $('loginError').textContent = 'Enter email and password.'; return; }
+  $('loginBtn').disabled = true;
+  try {
+    const response = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!response.ok) throw new Error(await readError(response, 'Could not log in'));
+    storeSession(await response.json(), email);
+    $('password').value = '';
+    await showApp();
+  } catch (e) {
+    $('loginError').textContent = e.message || 'Could not log in.';
+  } finally {
+    $('loginBtn').disabled = false;
+  }
+}
+
+function logout() {
+  session = null;
+  sessionStorage.removeItem('decode_portal_session');
+  rows = [];
+  current = null;
+  $('app').classList.add('hidden');
+  $('login').classList.remove('hidden');
+  $('logout').classList.add('hidden');
+  $('who').textContent = '';
+}
+
+/* ------------------------------- data ------------------------------ */
+async function loadRows() {
+  await ensureFreshSession();
+  const response = await fetch(REST + '?select=*&order=updated_at.desc&limit=1000', { headers: apiHeaders() });
+  if (response.status === 401) { logout(); throw new Error('Session expired. Please log in again.'); }
+  if (!response.ok) throw new Error(await readError(response, 'Could not load components'));
+  rows = await response.json();
+  renderList();
+}
+
+async function saveCurrent() {
+  syncFromForm();
+  if (!current.name.trim()) { toast('Enter a name first.'); return; }
+  if (!current.html.trim()) { toast('The HTML tab is empty.'); return; }
+  $('saveBtn').disabled = true;
+  try {
+    await ensureFreshSession();
+    const body = {
+      id: current.id, name: current.name.trim(), description: current.description.trim(),
+      category: current.category, html: current.html, css: current.css, js: current.js,
+      published: current.published,
+    };
+    const response = await fetch(REST + '?on_conflict=id', {
+      method: 'POST',
+      headers: apiHeaders({ Prefer: 'resolution=merge-duplicates,return=minimal' }),
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) throw new Error(await readError(response, 'Could not save'));
+    toast(current.published ? 'Saved. It is live in the app now.' : 'Saved as draft (hidden from the app).');
+    await loadRows();
+  } catch (e) {
+    toast(e.message || 'Could not save.');
+  } finally {
+    $('saveBtn').disabled = false;
+  }
+}
+
+async function deleteCurrent() {
+  if (!current || !rows.some((r) => r.id === current.id)) { openNew(); return; }
+  if (!confirm('Delete "' + current.name + '" for everyone? This cannot be undone.')) return;
+  try {
+    await ensureFreshSession();
+    const response = await fetch(REST + '?id=eq.' + encodeURIComponent(current.id), {
+      method: 'DELETE', headers: apiHeaders({ Prefer: 'return=minimal' }),
+    });
+    if (!response.ok) throw new Error(await readError(response, 'Could not delete'));
+    toast('Deleted.');
+    current = null;
+    showEditor(false);
+    await loadRows();
+  } catch (e) {
+    toast(e.message || 'Could not delete.');
+  }
+}
+
+/* ------------------------------- UI ------------------------------- */
+function renderList() {
+  const query = $('search').value.trim().toLowerCase();
+  const box = $('items');
+  box.textContent = '';
+  const shown = rows.filter((r) => !query ||
+    (r.name || '').toLowerCase().includes(query) ||
+    (r.category || '').toLowerCase().includes(query));
+  if (!shown.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = rows.length ? 'No matches' : 'Nothing published yet. Press New.';
+    box.appendChild(empty);
+    return;
+  }
+  for (const row of shown) {
+    const item = document.createElement('div');
+    item.className = 'item' + (current && current.id === row.id ? ' active' : '');
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = row.name;
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const cat = document.createElement('span');
+    cat.textContent = row.category;
+    const badge = document.createElement('span');
+    badge.className = 'badge' + (row.published ? ' pub' : '');
+    badge.textContent = row.published ? 'Published' : 'Draft';
+    meta.append(cat, badge);
+    item.append(name, meta);
+    item.addEventListener('click', () => { current = Object.assign({}, row); fillForm(); });
+    box.appendChild(item);
+  }
+}
+
+function showEditor(on) {
+  $('editorEmpty').classList.toggle('hidden', on);
+  $('editorForm').classList.toggle('hidden', !on);
+}
+
+function openNew() {
+  current = { id: newId(), name: '', description: '', category: 'UI', html: '', css: '', js: '', published: true };
+  fillForm();
+  $('name').focus();
+}
+
+function fillForm() {
+  showEditor(true);
+  $('name').value = current.name || '';
+  $('description').value = current.description || '';
+  $('category').value = CATEGORIES.includes(current.category) ? current.category : 'UI';
+  $('published').checked = current.published !== false;
+  tab = 'html';
+  showTab();
+  renderList();
+  updatePreview();
+}
+
+function syncFromForm() {
+  current.name = $('name').value;
+  current.description = $('description').value;
+  current.category = $('category').value;
+  current.published = $('published').checked;
+  current[tab] = $('code').value;
+}
+
+function showTab() {
+  document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+  $('code').value = current ? current[tab] || '' : '';
+}
+
+function setTab(next) {
+  if (current) current[tab] = $('code').value;
+  tab = next;
+  showTab();
+}
+
+function buildDocument(c) {
+  const style = c.css && c.css.trim() ? '<style>\n' + c.css + '\n</style>\n' : '';
+  const script = c.js && c.js.trim() ? '<script>\n' + c.js + '\n<\/script>\n' : '';
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+    style + '</head><body>\n' + (c.html || '') + '\n' + script + '</body></html>';
+}
+
+function updatePreview() {
+  if (!current) return;
+  current[tab] = $('code').value;
+  // sandbox="allow-scripts" without allow-same-origin: the preview cannot
+  // reach this page, its storage or your login.
+  $('preview').srcdoc = buildDocument(current);
+}
+
+/* ----------------------------- events ----------------------------- */
+$('loginBtn').addEventListener('click', login);
+$('password').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+$('logout').addEventListener('click', logout);
+$('newBtn').addEventListener('click', openNew);
+$('search').addEventListener('input', renderList);
+$('saveBtn').addEventListener('click', saveCurrent);
+$('delBtn').addEventListener('click', deleteCurrent);
+$('dupBtn').addEventListener('click', () => {
+  syncFromForm();
+  current = Object.assign({}, current, { id: newId(), name: current.name + ' copy' });
+  fillForm();
+  toast('Duplicated. Press Save & publish to keep it.');
+});
+document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
+$('code').addEventListener('input', () => { clearTimeout(previewTimer); previewTimer = setTimeout(updatePreview, 300); });
+$('code').addEventListener('keydown', (e) => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const t = e.target, s = t.selectionStart;
+    t.value = t.value.slice(0, s) + '  ' + t.value.slice(t.selectionEnd);
+    t.selectionStart = t.selectionEnd = s + 2;
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && current) { e.preventDefault(); saveCurrent(); }
+});
+
+async function showApp() {
+  $('login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('logout').classList.remove('hidden');
+  $('who').textContent = session.email || '';
+  try { await loadRows(); } catch (e) { toast(e.message); }
+}
+
+(function init() {
+  $('category').innerHTML = CATEGORIES.map((c) => '<option>' + c + '</option>').join('');
+  try {
+    const saved = JSON.parse(sessionStorage.getItem('decode_portal_session') || 'null');
+    if (saved && saved.access_token) { session = saved; showApp(); }
+  } catch (_) { /* start logged out */ }
+})();
+</script>
+</body>
+</html>

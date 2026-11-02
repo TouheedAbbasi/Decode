@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:decode/app.dart';
 import 'package:decode/core/settings/settings_providers.dart';
+import 'package:decode/core/supabase/supabase_providers.dart';
 import 'package:decode/features/projects/project.dart';
 import 'package:decode/features/projects/project_providers.dart';
 import 'package:decode/features/projects/project_repository.dart';
@@ -26,6 +27,7 @@ void main() {
       ProviderScope(
         overrides: [
           sharedPrefsProvider.overrideWithValue(prefs),
+          supabaseProvider.overrideWithValue(null),
           projectRepositoryProvider.overrideWith(
             (ref) async => _EmptyRepository(),
           ),
@@ -33,6 +35,8 @@ void main() {
         child: const DecodeApp(),
       ),
     );
+    // The splash shows for a moment first.
+    await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
 
     expect(find.text('Your Phone. Your Code. Your Future.'), findsOneWidget);

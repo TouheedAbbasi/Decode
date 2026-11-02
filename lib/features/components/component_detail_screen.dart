@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/preview/preview_source.dart';
+import '../preview/inline_preview.dart';
 import '../preview/preview_screen.dart';
 import '../projects/project_providers.dart';
 import '../projects/project_tile.dart' show showNameDialog;
@@ -57,6 +58,11 @@ class _ComponentDetailScreenState extends ConsumerState<ComponentDetailScreen>
     final (label, code) = _tabs[_controller.index];
     await Clipboard.setData(ClipboardData(text: code));
     _toast('$label code copied');
+  }
+
+  Future<void> _copyComponent() async {
+    await Clipboard.setData(ClipboardData(text: widget.item.toSingleFile()));
+    _toast('Whole component copied (HTML, CSS and JS in one file)');
   }
 
   void _preview() {
@@ -141,7 +147,12 @@ class _ComponentDetailScreenState extends ConsumerState<ComponentDetailScreen>
         title: Text(widget.item.name),
         actions: [
           IconButton(
-            tooltip: 'Copy code',
+            tooltip: 'Full screen preview',
+            icon: const Icon(Icons.open_in_full_rounded),
+            onPressed: _preview,
+          ),
+          IconButton(
+            tooltip: 'Copy this tab',
             icon: const Icon(Icons.copy_rounded),
             onPressed: _copyCurrent,
           ),
@@ -164,9 +175,24 @@ class _ComponentDetailScreenState extends ConsumerState<ComponentDetailScreen>
           tabs: [for (final t in _tabs) Tab(text: t.$1)],
         ),
       ),
-      body: TabBarView(
-        controller: _controller,
-        children: [for (final t in _tabs) _CodeView(code: t.$2)],
+      body: Column(
+        children: [
+          SizedBox(
+            height: 250,
+            child: ClipRect(
+              child: InlinePreview(
+                source: MemorySource(widget.item.toFiles()),
+              ),
+            ),
+          ),
+          Divider(height: 1, color: Theme.of(context).colorScheme.outline),
+          Expanded(
+            child: TabBarView(
+              controller: _controller,
+              children: [for (final t in _tabs) _CodeView(code: t.$2)],
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
@@ -175,18 +201,17 @@ class _ComponentDetailScreenState extends ConsumerState<ComponentDetailScreen>
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: _preview,
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text('Preview'),
+                  onPressed: _copyComponent,
+                  icon: const Icon(Icons.copy_all_rounded),
+                  label: const Text('Copy component'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                flex: 2,
                 child: FilledButton.icon(
                   onPressed: _busy ? null : _useInNewProject,
                   icon: const Icon(Icons.create_new_folder_outlined),
-                  label: const Text('Use in new project'),
+                  label: const Text('New project'),
                 ),
               ),
             ],

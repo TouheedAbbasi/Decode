@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/preview/preview_source.dart';
-import '../preview/preview_screen.dart';
 import '../admin/admin_screen.dart';
+import '../preview/preview_screen.dart';
 import 'component_detail_screen.dart';
 import 'component_item.dart';
 import 'component_library.dart';
 import 'component_studio_screen.dart';
+import 'online_components.dart';
 import 'user_components.dart';
 
 class ComponentsScreen extends ConsumerStatefulWidget {
@@ -21,11 +22,20 @@ class _ComponentsScreenState extends ConsumerState<ComponentsScreen> {
   String _category = 'All';
   String _query = '';
 
-  List<ComponentItem> _filtered(List<ComponentItem> mine) {
-    final all = [...mine, ...componentLibrary];
+  List<ComponentItem> _filtered(
+    List<ComponentItem> mine,
+    List<ComponentItem> online,
+  ) {
+    final mineIds = {for (final c in mine) c.id};
+    final all = [
+      ...mine,
+      ...online.where((c) => !mineIds.contains(c.id)),
+      ...componentLibrary,
+    ];
     return all.where((c) {
       final inCategory = switch (_category) {
         'All' => true,
+        'Online' => c.isRemote,
         'My Components' => c.isUser,
         _ => c.category == _category,
       };
@@ -49,7 +59,8 @@ class _ComponentsScreenState extends ConsumerState<ComponentsScreen> {
     final scheme = Theme.of(context).colorScheme;
     final mine = ref.watch(userComponentsProvider).valueOrNull ??
         const <ComponentItem>[];
-    final items = _filtered(mine);
+    final online = ref.watch(onlineComponentsProvider);
+    final items = _filtered(mine, online.items);
 
     return Scaffold(
       appBar: AppBar(
@@ -99,30 +110,67 @@ class _ComponentsScreenState extends ConsumerState<ComponentsScreen> {
               },
             ),
           ),
-          Expanded(
-            child: items.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Text(
-                        _category == 'My Components' && _query.isEmpty
-                            ? 'No components yet. Tap + to create your first one.'
-                            : 'No matching components',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: scheme.onSurfaceVariant),
+          if (online.syncing) const LinearProgressIndicator(minHeight: 2),
+          if (online.error != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
+              child: Row(
+                children: [
+                  Icon(Icons.cloud_off_outlined,
+                      size: 16, color: scheme.onSurfaceVariant),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Could not sync. Showing saved components. '
+                      'Pull down to retry.',
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12,
                       ),
                     ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: items.length,
-                    separatorBuilder: (_, __) => const Divider(),
-                    itemBuilder: (_, i) => _ComponentTile(item: items[i]),
                   ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () =>
+                  ref.read(onlineComponentsProvider.notifier).refresh(),
+              child: items.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(40),
+                          child: Text(
+                            _emptyText(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: scheme.onSurfaceVariant),
+                          ),
+                        ),
+                      ],
+                    )
+                  : ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: items.length,
+                      separatorBuilder: (_, __) => const Divider(),
+                      itemBuilder: (_, i) => _ComponentTile(item: items[i]),
+                    ),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  String _emptyText() {
+    if (_query.isNotEmpty) return 'No matching components';
+    return switch (_category) {
+      'My Components' => 'No components yet. Tap + to create your first one.',
+      'Online' => 'No online components yet. Pull down to refresh.',
+      _ => 'No matching components',
+    };
   }
 }
 
@@ -145,11 +193,35 @@ class _ComponentTile extends StatelessWidget {
         ),
         child: Icon(item.icon, color: scheme.primary),
       ),
-      title: Text(
-        item.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      title: Row(
+        children: [
+          Flexible(
+            child: Text(
+              item.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            ),
+          ),
+          if (item.isNew) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'NEW',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
       subtitle: Text(
         item.description.isEmpty ? item.category : item.description,

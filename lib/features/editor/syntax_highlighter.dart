@@ -132,9 +132,36 @@ final _htmlOuter = RegExp(r'<!--[\s\S]*?(?:-->|$)|</?[a-zA-Z!][^<>]*>?');
 final _htmlName = RegExp(r'^</?[a-zA-Z!][\w:-]*');
 final _htmlPart = RegExp("([\\w:@.-]+)(?=\\s*=)|\"[^\"]*\"?|'[^']*'?");
 
+final _htmlBlock = RegExp(
+  r'<(style|script)\b[^>]*>([\s\S]*?)(?:</\1\s*>|$)',
+  caseSensitive: false,
+);
+
 List<Token> _tokenizeHtml(String text) {
   final tokens = <Token>[];
+  final blocks = <(int, int)>[];
+
+  // Code inside <style> and <script> is coloured as CSS / JavaScript.
+  for (final block in _htmlBlock.allMatches(text)) {
+    final inner = block.group(2)!;
+    if (inner.isEmpty) continue;
+    final innerStart = text.indexOf('>', block.start) + 1;
+    final isStyle = block.group(1)!.toLowerCase() == 'style';
+    final sub = isStyle
+        ? _scan(inner, _css, _cssKind)
+        : _scan(inner, _js, _jsKind);
+    for (final token in sub) {
+      tokens.add(
+        Token(token.start + innerStart, token.end + innerStart, token.kind),
+      );
+    }
+    blocks.add((innerStart, innerStart + inner.length));
+  }
+
+  bool inBlock(int index) => blocks.any((b) => index >= b.$1 && index < b.$2);
+
   for (final match in _htmlOuter.allMatches(text)) {
+    if (inBlock(match.start)) continue;
     final chunk = match[0]!;
     if (chunk.startsWith('<!--')) {
       tokens.add(Token(match.start, match.end, TokenKind.comment));
@@ -159,6 +186,8 @@ List<Token> _tokenizeHtml(String text) {
       }
     }
   }
+
+  tokens.sort((a, b) => a.start.compareTo(b.start));
   return tokens;
 }
 

@@ -32,6 +32,59 @@ class CodeEditing {
   static final _lineOpenTag = RegExp(r'^\s*<([a-zA-Z][\w:-]*)[^<>]*>$');
   static final _leadingSpace = RegExp(r'^[ \t]*');
 
+  /// Entry point for the text field. Looks at what the user just did (typed
+  /// one character, or pressed backspace) and returns the improved value.
+  static TextEditingValue? smartEdit(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+    CodeLanguage language,
+  ) {
+    if (!oldValue.selection.isValid) return null;
+    // Judge by where the cursor WAS: typing the `>` of `<script` must still
+    // count as HTML so the closing tag gets added.
+    final lang = effectiveLanguage(
+      oldValue.text,
+      oldValue.selection.start,
+      language,
+    );
+    return autoEdit(oldValue, newValue, lang) ??
+        autoDelete(oldValue, newValue);
+  }
+
+  /// Backspace on an auto-closed pair removes both characters.
+  static TextEditingValue? autoDelete(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (!oldValue.selection.isValid || !oldValue.selection.isCollapsed) {
+      return null;
+    }
+    if (!newValue.selection.isValid || !newValue.selection.isCollapsed) {
+      return null;
+    }
+    final oldText = oldValue.text;
+    final newText = newValue.text;
+    if (newText.length != oldText.length - 1) return null;
+
+    final i = newValue.selection.start;
+    if (i < 0 || i >= oldText.length || oldValue.selection.start != i + 1) {
+      return null;
+    }
+    if (oldText.substring(0, i) + oldText.substring(i + 1) != newText) {
+      return null;
+    }
+
+    final deleted = oldText[i];
+    final closer = _pairs[deleted] ?? (_quotes.contains(deleted) ? deleted : null);
+    if (closer == null || i >= newText.length || newText[i] != closer) {
+      return null;
+    }
+    return TextEditingValue(
+      text: newText.substring(0, i) + newText.substring(i + 1),
+      selection: TextSelection.collapsed(offset: i),
+    );
+  }
+
   /// Returns the edited value, or null when no special handling applies.
   /// [oldValue] -> [newValue] must be exactly one character typed at the
   /// cursor.
@@ -179,5 +232,5 @@ class CodeInputFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) =>
-      CodeEditing.autoEdit(oldValue, newValue, language) ?? newValue;
+      CodeEditing.smartEdit(oldValue, newValue, language) ?? newValue;
 }
