@@ -28,6 +28,13 @@ jobs:
             flutter create --org com.senpaistudio --project-name decode --platforms android .
           fi
 
+      - name: Patch Android (permissions, cleartext to localhost, icons)
+        run: python3 tool/patch_android.py
+
+      - name: Show the patched manifest (for debugging)
+        run: |
+          grep -E 'uses-permission|android:icon|android:label|networkSecurityConfig' android/app/src/main/AndroidManifest.xml
+
       - run: flutter pub get
 
       # Temporary: auto-format instead of failing, until formatting is verified.
@@ -42,7 +49,7 @@ jobs:
         run: flutter test
         continue-on-error: true
 
-      - run: flutter build apk --debug
+      - run: flutter build apk --debug --dart-define=DECODE_CI_PATCHED=true
 
       - uses: actions/upload-artifact@v4
         with:
