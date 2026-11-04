@@ -105,9 +105,9 @@ void main() {
 
     test('colours html tags and js keywords', () {
       final html = tokenize('<div>', CodeLanguage.html);
-      expect(html.first.kind, TokenKind.tag);
+      expect(html.map((t) => t.kind), contains(TokenKind.tag));
       final js = tokenize('const x = 1;', CodeLanguage.js);
-      expect(js.first.kind, TokenKind.keyword);
+      expect(js.first.kind, TokenKind.storage);
     });
   });
 

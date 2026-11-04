@@ -79,4 +79,16 @@ void main() {
     expect(big.existsSync(), isTrue);
     expect(() => workspace.read('big.txt'), throwsA(isA<FileSystemException>()));
   });
+
+  test('imports a file into a folder with a safe, unique name', () async {
+    final source = File(p.join(tmp.path, 'My Photo (1).PNG'))
+      ..writeAsBytesSync([9, 9, 9]);
+    final first = await workspace.importFile(source.path, 'img');
+    expect(first, 'img/My-Photo-1-.png');
+    expect(File(p.join(tmp.path, first)).readAsBytesSync(), [9, 9, 9]);
+
+    final second = await workspace.importFile(source.path, 'img');
+    expect(second, 'img/My-Photo-1--1.png');
+    expect(() => workspace.importFile(source.path, '../x'), throwsArgumentError);
+  });
 }
