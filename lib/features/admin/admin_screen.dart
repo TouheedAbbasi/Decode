@@ -7,6 +7,7 @@ import '../../core/preview/preview_source.dart';
 import '../components/component_backup.dart';
 import '../components/component_item.dart';
 import '../components/component_library.dart';
+import '../components/online_components.dart';
 import '../components/component_studio_screen.dart';
 import '../components/user_components.dart';
 import '../preview/preview_screen.dart';
@@ -282,7 +283,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           children: [
             _Stat(label: 'My components', value: '${all.length}'),
             const SizedBox(width: 10),
-            _Stat(label: 'Built-in', value: '${componentLibrary.length}'),
+            _Stat(
+              label: 'Online',
+              value: '${ref.watch(onlineComponentsProvider).items.length}',
+            ),
             const SizedBox(width: 10),
             _Stat(label: 'Projects', value: '$projects'),
           ],

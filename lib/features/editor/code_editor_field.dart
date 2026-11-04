@@ -2,12 +2,16 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'code_language.dart';
+import 'color_picker.dart';
+import 'css_color.dart';
 import 'editor_buffer.dart';
 import 'suggester.dart';
 import 'syntax_highlighter.dart';
 
-/// Multi-line code field: line numbers, horizontal scrolling and a
-/// VS Code style suggestion popup that opens right under the word you type.
+/// Multi-line code field: line numbers, current-line highlight, colour
+/// swatches and a VS Code style suggestion popup that opens right under the
+/// word you type.
 class CodeEditorField extends StatefulWidget {
   const CodeEditorField({
     super.key,
@@ -74,6 +78,24 @@ class _CodeEditorFieldState extends State<CodeEditorField> {
     widget.buffer.focus.requestFocus();
   }
 
+  Future<void> _pickColor(int start, int end, Color color) async {
+    final controller = widget.buffer.controller;
+    final text = controller.text;
+    if (end > text.length) return;
+    final picked = await showColorPickerDialog(
+      context,
+      initial: color,
+      initialText: text.substring(start, end),
+    );
+    if (picked == null || !mounted) return;
+    final now = controller.text;
+    if (end > now.length) return;
+    controller.value = TextEditingValue(
+      text: now.replaceRange(start, end, picked),
+      selection: TextSelection.collapsed(offset: start + picked.length),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final buffer = widget.buffer;
@@ -88,7 +110,7 @@ class _CodeEditorFieldState extends State<CodeEditorField> {
       color: theme.colorScheme.onSurface,
     );
     final gutterStyle = textStyle.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
+      color: theme.colorScheme.onSurfaceVariant.withAlpha(150),
     );
     final strut = StrutStyle(
       fontFamily: 'monospace',
@@ -98,9 +120,10 @@ class _CodeEditorFieldState extends State<CodeEditorField> {
     );
     final charWidth = _charWidth(textStyle);
     final lineHeight = widget.fontSize * _lineHeightFactor;
+    final lineHighlight = theme.colorScheme.primary.withAlpha(dark ? 30 : 16);
 
     return ListenableBuilder(
-      listenable: buffer.controller,
+      listenable: Listenable.merge([buffer.controller, buffer.focus]),
       builder: (context, _) {
         final text = buffer.controller.text;
         var lineCount = 1;
@@ -117,6 +140,17 @@ class _CodeEditorFieldState extends State<CodeEditorField> {
         }
         if (current > longest) longest = current;
 
+        int? caretLine;
+        final selection = buffer.controller.selection;
+        if (buffer.focus.hasFocus && selection.isValid) {
+          var line = 0;
+          final stop = math.min(selection.start, text.length);
+          for (var i = 0; i < stop; i++) {
+            if (text.codeUnitAt(i) == 10) line++;
+          }
+          caretLine = line;
+        }
+
         final digits = math.max(2, lineCount.toString().length);
         final gutterWidth =
             widget.showLineNumbers ? digits * charWidth + 22 : 0.0;
@@ -129,6 +163,7 @@ class _CodeEditorFieldState extends State<CodeEditorField> {
               constraints.maxWidth - gutterWidth,
               longest * charWidth + 64,
             );
+            final viewport = Size(constraints.maxWidth, constraints.maxHeight);
             return Stack(
               children: [
                 GestureDetector(
@@ -138,56 +173,81 @@ class _CodeEditorFieldState extends State<CodeEditorField> {
                     controller: _vertical,
                     padding:
                         const EdgeInsets.symmetric(vertical: _verticalPadding),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Stack(
                       children: [
-                        if (widget.showLineNumbers)
-                          SizedBox(
-                            width: gutterWidth,
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 10),
-                              child: Text(
-                                numbers,
-                                textAlign: TextAlign.right,
-                                style: gutterStyle,
-                                strutStyle: strut,
-                              ),
-                            ),
+                        if (caretLine != null)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            top: caretLine * lineHeight,
+                            height: lineHeight,
+                            child: ColoredBox(color: lineHighlight),
                           ),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            controller: _horizontal,
-                            scrollDirection: Axis.horizontal,
-                            child: SizedBox(
-                              width: contentWidth,
-                              child: TextField(
-                                controller: buffer.controller,
-                                focusNode: buffer.focus,
-                                undoController: buffer.undo,
-                                inputFormatters: widget.smartTyping
-                                    ? buffer.formatters
-                                    : const [],
-                                maxLines: null,
-                                keyboardType: TextInputType.multiline,
-                                textInputAction: TextInputAction.newline,
-                                autocorrect: false,
-                                enableSuggestions: false,
-                                smartDashesType: SmartDashesType.disabled,
-                                smartQuotesType: SmartQuotesType.disabled,
-                                style: textStyle,
-                                strutStyle: strut,
-                                cursorColor: theme.colorScheme.primary,
-                                cursorWidth: 2,
-                                decoration: const InputDecoration.collapsed(
-                                  hintText: null,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (widget.showLineNumbers)
+                              SizedBox(
+                                width: gutterWidth,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 10),
+                                  child: Text(
+                                    numbers,
+                                    textAlign: TextAlign.right,
+                                    style: gutterStyle,
+                                    strutStyle: strut,
+                                  ),
                                 ),
-                                scrollPadding: const EdgeInsets.all(48),
+                              ),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                controller: _horizontal,
+                                scrollDirection: Axis.horizontal,
+                                child: SizedBox(
+                                  width: contentWidth,
+                                  child: TextField(
+                                    controller: buffer.controller,
+                                    focusNode: buffer.focus,
+                                    undoController: buffer.undo,
+                                    inputFormatters: widget.smartTyping
+                                        ? buffer.formatters
+                                        : const [],
+                                    maxLines: null,
+                                    keyboardType: TextInputType.multiline,
+                                    textInputAction: TextInputAction.newline,
+                                    autocorrect: false,
+                                    enableSuggestions: false,
+                                    smartDashesType: SmartDashesType.disabled,
+                                    smartQuotesType: SmartQuotesType.disabled,
+                                    style: textStyle,
+                                    strutStyle: strut,
+                                    cursorColor: theme.colorScheme.primary,
+                                    cursorWidth: 2,
+                                    decoration: const InputDecoration.collapsed(
+                                      hintText: null,
+                                    ),
+                                    scrollPadding: const EdgeInsets.all(48),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: _ColorSwatches(
+                    buffer: buffer,
+                    vertical: _vertical,
+                    horizontal: _horizontal,
+                    charWidth: charWidth,
+                    lineHeight: lineHeight,
+                    gutterWidth: gutterWidth,
+                    verticalPadding: _verticalPadding,
+                    viewport: viewport,
+                    onPick: _pickColor,
                   ),
                 ),
                 Positioned.fill(
@@ -199,7 +259,7 @@ class _CodeEditorFieldState extends State<CodeEditorField> {
                     lineHeight: lineHeight,
                     gutterWidth: gutterWidth,
                     verticalPadding: _verticalPadding,
-                    viewport: Size(constraints.maxWidth, constraints.maxHeight),
+                    viewport: viewport,
                     onApply: _apply,
                   ),
                 ),
@@ -207,6 +267,130 @@ class _CodeEditorFieldState extends State<CodeEditorField> {
             );
           },
         );
+      },
+    );
+  }
+}
+
+/// Small colour boxes shown at the end of every visible line that contains a
+/// colour. Tap one to change the colour with HSL sliders.
+class _ColorSwatches extends StatefulWidget {
+  const _ColorSwatches({
+    required this.buffer,
+    required this.vertical,
+    required this.horizontal,
+    required this.charWidth,
+    required this.lineHeight,
+    required this.gutterWidth,
+    required this.verticalPadding,
+    required this.viewport,
+    required this.onPick,
+  });
+
+  final EditorBuffer buffer;
+  final ScrollController vertical;
+  final ScrollController horizontal;
+  final double charWidth;
+  final double lineHeight;
+  final double gutterWidth;
+  final double verticalPadding;
+  final Size viewport;
+  final void Function(int start, int end, Color color) onPick;
+
+  @override
+  State<_ColorSwatches> createState() => _ColorSwatchesState();
+}
+
+class _ColorSwatchesState extends State<_ColorSwatches> {
+  String? _cachedText;
+  List<int> _lineStarts = const [0];
+
+  List<int> _starts(String text) {
+    if (!identical(text, _cachedText)) {
+      _cachedText = text;
+      _lineStarts = [
+        0,
+        for (var i = 0; i < text.length; i++)
+          if (text.codeUnitAt(i) == 10) i + 1,
+      ];
+    }
+    return _lineStarts;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final language = widget.buffer.language;
+    if (language == CodeLanguage.text) return const SizedBox.shrink();
+
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        widget.buffer.controller,
+        widget.vertical,
+        widget.horizontal,
+      ]),
+      builder: (context, _) {
+        final text = widget.buffer.controller.text;
+        final starts = _starts(text);
+        final vOffset = widget.vertical.hasClients ? widget.vertical.offset : 0.0;
+        final hOffset =
+            widget.horizontal.hasClients ? widget.horizontal.offset : 0.0;
+
+        final first = math.max(
+          0,
+          ((vOffset - widget.verticalPadding) / widget.lineHeight).floor(),
+        );
+        final last = math.min(
+          starts.length - 1,
+          ((vOffset + widget.viewport.height) / widget.lineHeight).ceil(),
+        );
+
+        final children = <Widget>[];
+        for (var line = first; line <= last; line++) {
+          final start = starts[line];
+          final end = line + 1 < starts.length ? starts[line + 1] - 1 : text.length;
+          if (end <= start || end - start > 400) continue;
+          final lineText = text.substring(start, end);
+          final matches =
+              findColors(lineText, names: language == CodeLanguage.css);
+          for (var k = 0; k < matches.length; k++) {
+            final m = matches[k];
+            var x = widget.gutterWidth +
+                lineText.length * widget.charWidth +
+                10 +
+                k * 26 -
+                hOffset;
+            x = math.max(widget.gutterWidth, math.min(x, widget.viewport.width - 28));
+            final y = widget.verticalPadding +
+                line * widget.lineHeight -
+                vOffset +
+                (widget.lineHeight - 24) / 2;
+            children.add(
+              Positioned(
+                left: x,
+                top: y,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () =>
+                      widget.onPick(start + m.start, start + m.end, m.color),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: m.color,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: scheme.outline),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+        }
+        return Stack(children: children);
       },
     );
   }
@@ -243,6 +427,7 @@ class _SuggestionPopup extends StatefulWidget {
 
 class _SuggestionPopupState extends State<_SuggestionPopup> {
   static const _rowHeight = 38.0;
+  static const _visibleRows = 6;
 
   SuggestionResult? _result;
 
@@ -304,8 +489,9 @@ class _SuggestionPopupState extends State<_SuggestionPopup> {
         final hOffset =
             widget.horizontal.hasClients ? widget.horizontal.offset : 0.0;
 
-        final width = math.min(300.0, widget.viewport.width - 16);
-        final height = result.items.length * _rowHeight + 2;
+        final width = math.min(320.0, widget.viewport.width - 16);
+        final rows = math.min(result.items.length, _visibleRows);
+        final height = rows * _rowHeight + 2;
 
         final x = widget.gutterWidth + column * widget.charWidth - hOffset;
         final lineTop = widget.verticalPadding + line * widget.lineHeight - vOffset;
@@ -317,8 +503,7 @@ class _SuggestionPopupState extends State<_SuggestionPopup> {
         }
 
         // Hide it when the word has been scrolled out of view.
-        if (lineTop < -widget.lineHeight ||
-            lineTop > widget.viewport.height) {
+        if (lineTop < -widget.lineHeight || lineTop > widget.viewport.height) {
           return const SizedBox.shrink();
         }
 
@@ -328,6 +513,7 @@ class _SuggestionPopupState extends State<_SuggestionPopup> {
               left: left,
               top: top,
               width: width,
+              height: height,
               child: Material(
                 elevation: 6,
                 color: scheme.surface,
@@ -336,46 +522,45 @@ class _SuggestionPopupState extends State<_SuggestionPopup> {
                   side: BorderSide(color: scheme.outline),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final item in result.items)
-                      InkWell(
-                        canRequestFocus: false,
-                        onTap: () => widget.onApply(result, item),
-                        child: SizedBox(
-                          height: _rowHeight,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Row(
-                              children: [
-                                Text(
-                                  item.label,
-                                  style: const TextStyle(
-                                    fontFamily: 'monospace',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    item.preview,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontFamily: 'monospace',
-                                      fontSize: 12,
-                                      color: scheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: result.items.length,
+                  itemExtent: _rowHeight,
+                  itemBuilder: (_, i) {
+                    final item = result.items[i];
+                    return InkWell(
+                      canRequestFocus: false,
+                      onTap: () => widget.onApply(result, item),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
+                          children: [
+                            Text(
+                              item.label,
+                              style: const TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                item.preview,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 12,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                  ],
+                    );
+                  },
                 ),
               ),
             ),

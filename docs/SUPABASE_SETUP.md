@@ -40,3 +40,18 @@ appear in every app the next time it is opened (or pulled down to refresh).
 Free Supabase projects are paused after about a week without any activity.
 Normal app use counts as activity; if it ever pauses, press "Restore" in the
 dashboard.
+
+## Images for components (Storage)
+
+Run `supabase/storage.sql` once (paste your admin UID in the one place it
+asks for). It creates a PUBLIC bucket called `assets`.
+
+- Upload: open the portal, press **Images**, choose pictures.
+- Use: press **Copy link** or **Copy <img>** and paste it in your component
+  code. The link works for every user, so the picture also shows inside the
+  app (needs internet, like all online images).
+- Only the admin can upload or delete; everyone can view.
+
+Images for your own projects inside the app: in the editor open the Files
+panel and press the "add photo" button. The picture is copied into the
+project (default folder `img/`) and the path is copied for you.

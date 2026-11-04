@@ -11,7 +11,10 @@ import 'device_files.dart';
 /// A simple file manager for the phone's storage. Pick a folder to open it
 /// as a project, or tap an HTML / CSS / JS file to edit it directly.
 class FileBrowserScreen extends ConsumerStatefulWidget {
-  const FileBrowserScreen({super.key});
+  const FileBrowserScreen({super.key, this.pickFile = false});
+
+  /// When true, tapping any file returns its path instead of opening it.
+  final bool pickFile;
 
   @override
   ConsumerState<FileBrowserScreen> createState() => _FileBrowserScreenState();
@@ -100,7 +103,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         appBar: AppBar(
           title: Text(
             dir == null
-                ? 'Open from device'
+                ? (widget.pickFile ? 'Choose a file' : 'Open from device')
                 : (p.basename(dir.path).isEmpty ? 'Storage' : p.basename(dir.path)),
           ),
           actions: [
@@ -113,7 +116,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ],
         ),
         body: _body(scheme),
-        bottomNavigationBar: dir == null || _denied
+        bottomNavigationBar: dir == null || _denied || widget.pickFile
             ? null
             : SafeArea(
                 child: Padding(
@@ -222,7 +225,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   Widget _row(FileSystemEntity entity, ColorScheme scheme) {
     final name = p.basename(entity.path);
     final isDir = entity is Directory;
-    final editable = !isDir && _editor.isEditable(name);
+    final editable = !isDir && (widget.pickFile || _editor.isEditable(name));
     return ListTile(
       dense: true,
       leading: Icon(
@@ -245,6 +248,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       onTap: () {
         if (isDir) {
           _go(entity);
+        } else if (widget.pickFile) {
+          Navigator.of(context).pop(entity.path);
         } else if (editable) {
           openDeviceFolder(
             context,

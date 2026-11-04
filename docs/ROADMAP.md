@@ -3,7 +3,7 @@
 Source of truth: the project brief + `docs/design_reference.png`.
 Nothing below is marked done until it has been built and tried on a device.
 
-## Written (version 0.5.0), awaiting device test
+## Written (version 0.6.0), awaiting device test
 
 - Projects: create / rename / duplicate / search / delete / ZIP export.
 - Open real folders from phone storage and save back in place
@@ -19,6 +19,13 @@ Nothing below is marked done until it has been built and tried on a device.
   published there reach every app without an update.
 - Local Admin Panel: bulk actions, backup / import.
 - Splash screen, new launcher icon (adaptive).
+- Explore tab: 300 colour palettes, gradient / shadow / glass / neumorphism
+  generators, colour tools, lorem generator. Built-in demo components were
+  removed; the library is filled from the portal and My Components.
+- Editor: VS Code Light+/Dark+ colours, colour swatches with HSL picker,
+  property-aware CSS suggestions (fonts, values), lorem snippets, status bar.
+- Preview falls back to a bundled page when Android blocks the local server.
+- Import images into a project; Supabase Storage bucket for online images.
 
 ## Still to do
 

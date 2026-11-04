@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../device/file_browser_screen.dart';
 import '../projects/project_tile.dart' show showNameDialog;
 import 'workspace.dart';
 
@@ -90,6 +92,30 @@ class _ExplorerDrawerState extends State<ExplorerDrawer> {
       _toast(e.message);
     } catch (_) {
       _toast('Could not create it. Check storage permission.');
+    }
+  }
+
+  /// Copies a file (for example an image) from the phone into the project.
+  Future<void> _importFile() async {
+    final picked = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => const FileBrowserScreen(pickFile: true),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    final dest = _selectedDir.isEmpty ? 'img' : _selectedDir;
+    try {
+      final relative = await widget.workspace.importFile(picked, dest);
+      _children.clear();
+      _expanded.add(dest);
+      await _load('');
+      await _load(dest);
+      await Clipboard.setData(ClipboardData(text: relative));
+      if (mounted) _toast('Added $relative (path copied). Use it as src="$relative"');
+    } on FileSystemException catch (e) {
+      _toast(e.message);
+    } catch (_) {
+      _toast('Could not add the file.');
     }
   }
 
@@ -184,6 +210,11 @@ class _ExplorerDrawerState extends State<ExplorerDrawer> {
                     tooltip: 'New file',
                     icon: const Icon(Icons.note_add_outlined),
                     onPressed: () => _create(folder: false),
+                  ),
+                  IconButton(
+                    tooltip: 'Add a file or image from the phone',
+                    icon: const Icon(Icons.add_photo_alternate_outlined),
+                    onPressed: _importFile,
                   ),
                   IconButton(
                     tooltip: 'New folder',

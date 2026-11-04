@@ -37,6 +37,10 @@ abstract class Workspace {
   Future<void> createFile(String path);
 
   Future<void> createFolder(String path);
+
+  /// Copies a file from the phone into [destDir] and returns its new
+  /// relative path.
+  Future<String> importFile(String sourcePath, String destDir);
 }
 
 class DirectoryWorkspace implements Workspace {
@@ -159,5 +163,28 @@ class DirectoryWorkspace implements Workspace {
   @override
   Future<void> createFolder(String path) async {
     await Directory(_resolve(path)).create(recursive: true);
+  }
+
+  @override
+  Future<String> importFile(String sourcePath, String destDir) async {
+    final source = File(sourcePath);
+    if (!await source.exists()) {
+      throw const FileSystemException('That file does not exist.');
+    }
+    final directory = Directory(_resolve(destDir));
+    await directory.create(recursive: true);
+
+    final base = p
+        .basenameWithoutExtension(sourcePath)
+        .replaceAll(RegExp(r'[^\w.-]+'), '-');
+    final extension = p.extension(sourcePath).toLowerCase();
+    var name = '$base$extension';
+    var n = 1;
+    while (await File(p.join(directory.path, name)).exists()) {
+      name = '$base-$n$extension';
+      n++;
+    }
+    await source.copy(p.join(directory.path, name));
+    return destDir.isEmpty ? name : '$destDir/$name';
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/build_info.dart';
 import '../../core/settings/settings_providers.dart';
 import '../admin/admin_screen.dart';
 
@@ -114,8 +115,40 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Decode by Senpai Studio  -  version 0.3.0',
+            'Decode by Senpai Studio  -  version $appVersion',
             style: TextStyle(color: muted),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              border: Border.all(color: theme.colorScheme.outline),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  ciPatched ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
+                  color: ciPatched ? Colors.green : Colors.orange,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    ciPatched
+                        ? 'Build check: OK. This build used the latest workflow '
+                            '(app icon, permissions and preview settings applied).'
+                        : 'Build check: this build did NOT use the latest '
+                            '.github/workflows/ci.yml, so the app icon and some '
+                            'permissions can be wrong. Copy the hidden .github '
+                            'folder from the newest zip and push again.',
+                    style: TextStyle(color: muted, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           Text(

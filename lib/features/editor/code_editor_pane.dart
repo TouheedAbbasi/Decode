@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'code_actions.dart';
 import 'code_editing.dart';
 import 'code_editor_field.dart';
+import 'code_language.dart';
 import 'editor_buffer.dart';
 
 /// The editor plus the coding-symbol toolbar. Suggestions are drawn inside
@@ -76,10 +77,55 @@ class CodeEditorPane extends StatelessWidget {
           ),
         ),
         ListenableBuilder(
+          listenable: buffer.controller,
+          builder: (context, _) => _statusBar(scheme),
+        ),
+        ListenableBuilder(
           listenable: buffer.undo,
           builder: (context, _) => _toolbar(scheme),
         ),
       ],
+    );
+  }
+
+  /// Thin VS Code style status strip: line, column, language.
+  Widget _statusBar(ColorScheme scheme) {
+    final controller = buffer.controller;
+    final text = controller.text;
+    final selection = controller.selection;
+    var line = 1;
+    var column = 1;
+    var selected = 0;
+    if (selection.isValid) {
+      final offset = selection.start.clamp(0, text.length);
+      for (var i = 0; i < offset; i++) {
+        if (text.codeUnitAt(i) == 10) line++;
+      }
+      column = offset - (text.substring(0, offset).lastIndexOf('\n') + 1) + 1;
+      selected = selection.end - selection.start;
+    }
+    final language = switch (buffer.language) {
+      CodeLanguage.html => 'HTML',
+      CodeLanguage.css => 'CSS',
+      CodeLanguage.js => 'JavaScript',
+      CodeLanguage.text => 'Text',
+    };
+    final style = TextStyle(color: scheme.onSurfaceVariant, fontSize: 11);
+    return Container(
+      height: 24,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        border: Border(top: BorderSide(color: scheme.outline)),
+      ),
+      child: Row(
+        children: [
+          Text('Ln $line, Col $column', style: style),
+          if (selected > 0) Text('  ($selected selected)', style: style),
+          const Spacer(),
+          Text('Spaces: 2   UTF-8   $language', style: style),
+        ],
+      ),
     );
   }
 

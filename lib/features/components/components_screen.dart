@@ -30,7 +30,6 @@ class _ComponentsScreenState extends ConsumerState<ComponentsScreen> {
     final all = [
       ...mine,
       ...online.where((c) => !mineIds.contains(c.id)),
-      ...componentLibrary,
     ];
     return all.where((c) {
       final inCategory = switch (_category) {
@@ -61,6 +60,16 @@ class _ComponentsScreenState extends ConsumerState<ComponentsScreen> {
         const <ComponentItem>[];
     final online = ref.watch(onlineComponentsProvider);
     final items = _filtered(mine, online.items);
+    final categories = [
+      'All',
+      if (online.items.isNotEmpty) 'Online',
+      if (mine.isNotEmpty) 'My Components',
+      for (final c in userCategories)
+        if (mine.any((m) => m.category == c) ||
+            online.items.any((o) => o.category == c))
+          c,
+    ];
+    if (!categories.contains(_category)) _category = 'All';
 
     return Scaffold(
       appBar: AppBar(
@@ -97,10 +106,10 @@ class _ComponentsScreenState extends ConsumerState<ComponentsScreen> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: componentCategories.length,
+              itemCount: categories.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (_, i) {
-                final name = componentCategories[i];
+                final name = categories[i];
                 return ChoiceChip(
                   label: Text(name),
                   selected: _category == name,
@@ -169,7 +178,8 @@ class _ComponentsScreenState extends ConsumerState<ComponentsScreen> {
     return switch (_category) {
       'My Components' => 'No components yet. Tap + to create your first one.',
       'Online' => 'No online components yet. Pull down to refresh.',
-      _ => 'No matching components',
+      _ => 'No components yet.\nPublish some from the portal, or tap + to '
+          'build your own.',
     };
   }
 }

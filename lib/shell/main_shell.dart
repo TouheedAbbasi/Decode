@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/components/components_screen.dart';
+import '../features/explore/explore_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/projects/projects_screen.dart';
 import '../features/settings/settings_screen.dart';
@@ -28,7 +28,7 @@ class MainShell extends ConsumerWidget {
         children: const [
           HomeScreen(),
           ProjectsScreen(),
-          ComponentsScreen(),
+          ExploreScreen(),
           SettingsScreen(),
         ],
       ),
@@ -48,9 +48,9 @@ class MainShell extends ConsumerWidget {
             label: 'Projects',
           ),
           NavigationDestination(
-            icon: Icon(Icons.grid_view_outlined),
-            selectedIcon: Icon(Icons.grid_view_rounded),
-            label: 'Components',
+            icon: Icon(Icons.explore_outlined),
+            selectedIcon: Icon(Icons.explore_rounded),
+            label: 'Explore',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),
