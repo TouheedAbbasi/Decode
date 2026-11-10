@@ -1,34 +1,35 @@
-# Decode: Mobile Code Editor
+# Decode by Senpai Studio
 
-Decode is a mobile code editor that lets you write and preview web code right on your phone. Create HTML, CSS and JS files, see the result live inside the app, or open it in your browser with one tap.
+Free, ad-free mobile coding IDE for Android. Built with Flutter.
 
-## Features
-- Create and edit HTML, CSS and JavaScript files
-- Live preview inside the app
-- "Open with browser" to preview the page in Chrome
-- **Explore** section with ready-made UI components
-- Built-in dev tools: gradient maker, box shadow generator
-- 300 color palettes, pick colors and insert them directly into your code
-- Components managed from a custom Supabase-powered admin panel
+> Your Phone. Your Code. Your Future.
 
-## Tech Stack
-Flutter, Dart, Supabase (apni asli stack ke hisaab se theek karo)
+## First-time setup
 
-## Screenshots
-![Editor](screenshots/editor.png)
-![Live preview](screenshots/preview.png)
-![Explore](screenshots/explore.png)
+This repo contains the Dart source, assets and CI only. Generate the Android
+runner once:
 
-## Download
-📥 APK: see the **Releases** section of this repo
-
-## Run locally
 ```bash
-git clone https://github.com/TouheedAbbasi/decode-app.git
-cd decode-app
+flutter create --org com.senpaistudio --project-name decode --platforms android .
 flutter pub get
+dart format .
+flutter analyze
+flutter test
 flutter run
 ```
 
-## Author
-Touheed Abbasi, Junior Web & App Developer, Karachi
+`flutter create` will not overwrite the existing `lib/`, `pubspec.yaml` or
+`test/` files. Commit the generated `android/` folder afterwards.
+
+See `docs/ROADMAP.md` for the plan.
+
+## Building without a local Flutter install
+
+Push to GitHub. The "Build APK" workflow generates `android/`, runs
+`tool/patch_android.py` (INTERNET permission, localhost-only cleartext, app
+name, launcher icons) and uploads `app-debug.apk` as an artifact.
+
+## Online components (Supabase)
+
+See `docs/SUPABASE_SETUP.md`. Run `supabase/schema.sql` once, host
+`portal/Decode-Admin.html`, and publish components from there.

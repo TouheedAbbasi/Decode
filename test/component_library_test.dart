@@ -43,7 +43,19 @@ void main() {
   });
 
   test('categories for filing components', () {
-    expect(userCategories, contains('Glassmorphism'));
+    expect(userCategories.length, 33);
+    expect(userCategories.toSet().length, 33);
+    expect(userCategories, containsAll(['Buttons', 'Navbar', 'Hero Sections', 'UI']));
     expect(userCategories, isNot(contains('All')));
+    expect(userCategories, isNot(contains('Online')));
+  });
+
+  test('old and unknown categories map to today\'s list', () {
+    expect(normalizeCategory('Glassmorphism'), 'UI');
+    expect(normalizeCategory('Navigation'), 'Navbar');
+    expect(normalizeCategory('Templates'), 'Landing Pages');
+    expect(normalizeCategory('cards'), 'Cards');
+    expect(normalizeCategory('  Footers '), 'Footers');
+    expect(normalizeCategory('something odd'), 'UI');
   });
 }
