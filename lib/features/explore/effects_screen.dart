@@ -42,7 +42,7 @@ class _EffectsScreenState extends State<EffectsScreen> {
 
   Color _shift(Color c, double delta) {
     final hsl = HSLColor.fromColor(c);
-    return hsl.withLightness((hsl.lightness + delta).clamp(0.0, 1.0)).toColor();
+    return hsl.withLightness((hsl.lightness + delta).clamp(0.0, 1.0).toDouble()).toColor();
   }
 
   String _rgba(Color c, double alpha) {

@@ -6,6 +6,7 @@ import 'effects_screen.dart';
 import 'gradient_screen.dart';
 import 'lorem_screen.dart';
 import 'palettes_screen.dart';
+import 'web_tool_screen.dart';
 
 /// Inspiration and developer tools in one place.
 class ExploreScreen extends StatelessWidget {
@@ -45,6 +46,24 @@ class ExploreScreen extends StatelessWidget {
         title: 'Color Tools',
         subtitle: 'HSL, contrast, shades',
         page: const ColorToolsScreen(),
+      ),
+      (
+        icon: Icons.star_outline_rounded,
+        title: 'Icons',
+        subtitle: 'Bootstrap, Material, Font Awesome',
+        page: const WebToolScreen(
+          title: 'Popular Icons',
+          asset: 'assets/web/icons.html',
+        ),
+      ),
+      (
+        icon: Icons.text_fields_rounded,
+        title: 'Fonts',
+        subtitle: 'Google Fonts and pairings',
+        page: const WebToolScreen(
+          title: 'Fonts',
+          asset: 'assets/web/fonts.html',
+        ),
       ),
       (
         icon: Icons.notes_rounded,

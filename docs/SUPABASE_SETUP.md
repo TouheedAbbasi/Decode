@@ -2,7 +2,7 @@
 
 How it works
 
-    you  ->  portal/index.html (admin login)  ->  Supabase table `components`
+    you  ->  portal/Decode-Admin.html (admin login)  ->  Supabase table `components`
                                                         |
     every phone  ->  Decode app downloads the list  <---+
                      (cached, so it also works offline)
@@ -19,10 +19,10 @@ appear in every app the next time it is opened (or pulled down to refresh).
    (two places) with that UID, then run the whole file in
    Supabase > SQL Editor.
 3. Turn OFF "Allow new users to sign up" in the Auth settings.
-4. Open `portal/index.html` and check the two constants at the top
+4. Open `portal/Decode-Admin.html` and check the two constants at the top
    (`SUPABASE_URL`, `SUPABASE_KEY`). They already contain this project's
    URL and publishable key.
-5. Host `portal/index.html`: drag the `portal` folder into
+5. Host `portal/Decode-Admin.html`: drag the `portal` folder into
    https://app.netlify.com/drop, or use Cloudflare Pages / Vercel, or just
    open the file from your phone/PC. (GitHub Pages needs a public repo.)
 
@@ -55,3 +55,18 @@ asks for). It creates a PUBLIC bucket called `assets`.
 Images for your own projects inside the app: in the editor open the Files
 panel and press the "add photo" button. The picture is copied into the
 project (default folder `img/`) and the path is copied for you.
+
+## Decode-Admin.html (AI + many components at once)
+
+`portal/Decode-Admin.html` is the whole admin site in one file.
+
+- Host it on Netlify: drag the `portal` folder into https://app.netlify.com/drop.
+  The `_redirects` file makes the page open at the site address itself.
+- AI Studio writes several components at the same time. Add one or more API
+  keys under **AI Settings**. Keys are stored only in that browser
+  (localStorage, or sessionStorage when "Remember keys" is off). They are
+  never written into the file and are sent only to the provider you picked.
+- Providers: Google Gemini, Groq, OpenRouter (free models), Mistral,
+  Cerebras and any OpenAI-compatible endpoint. Model names change often, so
+  use the **Load** button next to the model box.
+- Use **Test all & sort by speed** to put the fastest provider first.

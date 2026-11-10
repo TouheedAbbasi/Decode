@@ -71,6 +71,13 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
+            title: const Text('Word wrap'),
+            subtitle: const Text('Long lines continue on the next row'),
+            value: ref.watch(wordWrapProvider),
+            onChanged: (v) => ref.read(wordWrapProvider.notifier).set(v),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
             title: const Text('Line numbers'),
             value: ref.watch(lineNumbersProvider),
             onChanged: (v) => ref.read(lineNumbersProvider.notifier).set(v),

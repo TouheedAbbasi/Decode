@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import 'component_item.dart';
+import 'component_library.dart';
 
 const backupFormat = 'decode-components';
 const maxImportedComponents = 500;
@@ -57,7 +58,10 @@ List<ComponentItem> decodeBackup(
     if (name.isEmpty || html.trim().isEmpty) continue;
 
     var category = str(entry['category']);
-    if (!categories.contains(category)) category = 'UI';
+    if (!categories.contains(category)) {
+      final mapped = normalizeCategory(category);
+      category = categories.contains(mapped) ? mapped : 'UI';
+    }
 
     result.add(
       ComponentItem(

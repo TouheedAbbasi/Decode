@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Decode Admin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M10 8h6a8 8 0 0 1 0 16h-6' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f6f6f4; --surface: #ffffff; --surface-2: #fafaf9; --border: #e5e5e1; --text: #1b1c20; --muted: #6b6f7b;
+  --accent: #4f46e5; --accent-2: #7c3aed; --accent-soft: #eeedfc; --danger: #d92d20; --ok: #067647; --warn: #b54708;
+  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 8px 24px rgba(16,24,40,.06); --radius: 12px; color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #0d0f14; --surface: #151821; --surface-2: #11141b; --border: #262b38; --text: #e8e9ee; --muted: #8d93a5;
+  --accent: #7c74f7; --accent-2: #a78bfa; --accent-soft: #22254a; --danger: #f97066; --ok: #47cd89; --warn: #fdb022;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.hidden { display: none !important; }
+h2 { margin: 0 0 4px; font-size: 18px; }
+p { margin: 0; }
+a { color: var(--accent); }
+code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+
+/* ---- controls ---- */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-weight: 600; font-size: 13px; white-space: nowrap; transition: border-color .15s, background .15s, transform .05s; }
+.btn:hover { border-color: var(--accent); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; color: #fff; }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); }
+.btn.small { padding: 5px 10px; font-size: 12px; border-radius: 8px; }
+.btn.big { padding: 12px 18px; font-size: 14px; width: 100%; justify-content: center; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
+.icon-btn:hover { border-color: var(--accent); }
+.ic { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+input[type=text], input[type=email], input[type=password], input[type=number], select, textarea {
+  width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); outline: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+label.lab { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin: 14px 0 6px; letter-spacing: .02em; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.muted { color: var(--muted); }
+.small-text { font-size: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: 12px; font-weight: 600; user-select: none; }
+.chip:hover { border-color: var(--accent); }
+.chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; padding: 6px 11px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--muted); }
+.seg button.on { background: var(--accent-soft); color: var(--accent); }
+.seg .n { opacity: .7; margin-left: 4px; font-weight: 500; }
+.badge { font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+.badge.pub { color: var(--ok); border-color: var(--ok); }
+.badge.draft { color: var(--warn); border-color: var(--warn); }
+.switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch span { position: absolute; inset: 0; border-radius: 999px; background: var(--border); cursor: pointer; transition: background .15s; }
+.switch span::before { content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.switch input:checked + span { background: var(--accent); }
+.switch input:checked + span::before { transform: translateX(18px); }
+
+/* ---- shell ---- */
+.topbar { display: flex; align-items: center; gap: 14px; padding: 10px 18px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; }
+.brand svg { width: 28px; height: 28px; }
+#nav { display: flex; gap: 4px; margin-left: 10px; }
+#nav button { display: flex; align-items: center; gap: 7px; padding: 8px 13px; border: 0; background: transparent; border-radius: 10px; cursor: pointer; font-weight: 600; color: var(--muted); }
+#nav button:hover { background: var(--accent-soft); }
+#nav button.on { background: var(--accent-soft); color: var(--accent); }
+.spacer { flex: 1; }
+#who { color: var(--muted); font-size: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+main { height: calc(100% - 57px); }
+.view { height: 100%; }
+.split { display: grid; grid-template-columns: 380px 1fr; height: 100%; }
+.pane { overflow: auto; background: var(--surface); }
+.list-pane { border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+.editor-pane { background: var(--bg); padding: 18px 22px 40px; }
+.pane-head { display: flex; gap: 8px; padding: 12px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 12px 10px; align-items: center; }
+.filters select { width: auto; padding: 6px 10px; font-size: 12px; }
+.bulk { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; background: var(--accent-soft); border-block: 1px solid var(--border); }
+.bulk select { width: auto; padding: 5px 8px; font-size: 12px; }
+.items { overflow: auto; flex: 1; }
+.item { display: flex; gap: 10px; align-items: flex-start; padding: 11px 14px; border-top: 1px solid var(--border); cursor: pointer; }
+.item:hover, .item.active { background: var(--accent-soft); }
+.item input[type=checkbox] { margin-top: 3px; accent-color: var(--accent); }
+.item .name { font-weight: 700; font-size: 13.5px; }
+.item .meta { margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--muted); }
+.empty { color: var(--muted); text-align: center; padding: 60px 20px; }
+
+/* ---- editor ---- */
+.editor-head { display: flex; gap: 14px; align-items: center; }
+.title-input { font-size: 20px; font-weight: 800; border: 0 !important; background: transparent !important; padding: 4px 0 !important; box-shadow: none !important; }
+.status-toggle { display: flex; align-items: center; gap: 8px; font-weight: 600; white-space: nowrap; }
+.tabs { display: flex; gap: 2px; margin-top: 14px; }
+.tab { padding: 8px 18px; border: 1px solid var(--border); border-bottom: 0; border-radius: 10px 10px 0 0; background: var(--surface-2); cursor: pointer; font-weight: 700; color: var(--muted); font-size: 12px; }
+.tab.on { background: var(--surface); color: var(--accent); }
+textarea.code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.55; min-height: 260px; resize: vertical; white-space: pre; overflow: auto; border-radius: 0 10px 10px 10px; tab-size: 2; }
+.card-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-top: 14px; box-shadow: var(--shadow); }
+.ai-box summary { cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.ai-box .row { display: flex; gap: 8px; margin-top: 10px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.preview-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 20px; }
+.preview-wrap { margin-top: 10px; display: flex; justify-content: center; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; }
+#preview { height: 420px; border: 1px solid var(--border); border-radius: 10px; background: #fff; max-width: 100%; transition: width .2s; }
+
+/* ---- AI studio ---- */
+.ai-split { grid-template-columns: 400px 1fr; }
+.ai-side { padding: 18px; border-right: 1px solid var(--border); }
+.ai-results { background: var(--bg); padding: 18px; }
+.results-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.res { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+.res.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft), var(--shadow); }
+.res iframe { width: 100%; height: 230px; border: 0; background: #fff; display: block; }
+.res .body { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.res .top { display: flex; gap: 8px; align-items: center; }
+.res .top input[type=text] { font-weight: 700; padding: 6px 9px; }
+.res .foot { display: flex; flex-wrap: wrap; gap: 6px; }
+.res .info { font-size: 11px; color: var(--muted); }
+.skeleton { height: 230px; display: grid; place-items: center; color: var(--muted); background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 12px, var(--surface) 12px, var(--surface) 24px); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .55; } }
+.err { padding: 14px; color: var(--danger); font-size: 13px; }
+.spin { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- settings ---- */
+.page { max-width: 880px; margin: 0 auto; padding: 22px 20px 60px; overflow: auto; height: 100%; }
+.prov { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-top: 12px; }
+.prov.off { opacity: .75; }
+.prov-head { display: flex; align-items: center; gap: 10px; }
+.prov-head .t { font-weight: 800; flex: 1; }
+.prov .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.keyrow { display: flex; gap: 6px; }
+.notice { margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); border: 1px solid var(--border); font-size: 13px; line-height: 1.5; }
+.ms { font-weight: 700; font-size: 12px; }
+.ms.ok { color: var(--ok); } .ms.bad { color: var(--danger); }
+
+/* ---- images ---- */
+.media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 14px; }
+.thumb { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.thumb img { width: 100%; height: 110px; object-fit: cover; display: block; background: repeating-conic-gradient(#e5e5e1 0 25%, #fff 0 50%) 50% / 16px 16px; }
+.thumb .n { font-size: 11px; padding: 6px 8px 0; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thumb .b { display: flex; gap: 4px; padding: 6px 8px 8px; flex-wrap: wrap; }
+.drop { border: 2px dashed var(--border); border-radius: var(--radius); padding: 26px; text-align: center; color: var(--muted); margin-top: 14px; }
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+
+/* ---- login + toast ---- */
+#loginView { min-height: 100%; display: grid; place-items: center; padding: 20px; background: radial-gradient(1200px 500px at 50% -10%, var(--accent-soft), transparent); }
+.login-card { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; box-shadow: var(--shadow); }
+.login-card h1 { margin: 10px 0 2px; font-size: 22px; }
+#toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 13px; max-width: 92vw; opacity: 0; pointer-events: none; transition: all .2s; z-index: 50; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 900px) {
+  .split, .ai-split { grid-template-columns: 1fr; height: auto; }
+  .list-pane { max-height: 46vh; border-right: 0; border-bottom: 1px solid var(--border); }
+  .ai-side { border-right: 0; border-bottom: 1px solid var(--border); }
+  main { height: auto; }
+  .view { height: auto; }
+  #nav button span.t { display: none; }
+  .row2, .prov .grid { grid-template-columns: 1fr; }
+  #who { display: none; }
+}
+
+</style>
+</head>
+<body>
+<!-- ============================ LOGIN ============================ -->
+<div id="loginView">
+  <div class="login-card">
+    <div class="brand" id="loginLogo"></div>
+    <h1>Admin login</h1>
+    <p class="muted">Only the admin account can publish components.</p>
+    <label class="lab" for="email">Email</label>
+    <input id="email" type="email" autocomplete="username">
+    <label class="lab" for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password">
+    <label class="small-text muted" style="display:flex;gap:8px;align-items:center;margin-top:12px">
+      <input type="checkbox" id="keepLogin"> Keep me signed in on this browser
+    </label>
+    <button class="btn primary big" id="loginBtn" style="margin-top:16px">Log in</button>
+    <p id="loginError" style="color:var(--danger);margin-top:12px"></p>
+  </div>
+</div>
+
+<!-- ============================== APP ============================== -->
+<div id="shell" class="hidden">
+  <header class="topbar">
+    <div class="brand" id="brand"></div>
+    <nav id="nav">
+      <button data-view="components" class="on"><span data-ic="grid"></span><span class="t">Components</span></button>
+      <button data-view="ai"><span data-ic="sparkles"></span><span class="t">AI Studio</span></button>
+      <button data-view="images"><span data-ic="image"></span><span class="t">Images</span></button>
+      <button data-view="settings"><span data-ic="sliders"></span><span class="t">AI Settings</span></button>
+    </nav>
+    <div class="spacer"></div>
+    <span id="who"></span>
+    <button class="icon-btn" id="themeBtn" title="Light / dark"></button>
+    <button class="btn ghost small" id="logoutBtn">Log out</button>
+  </header>
+
+  <main>
+    <!-- ---------------- COMPONENTS ---------------- -->
+    <section id="view-components" class="view">
+      <div class="split">
+        <aside class="pane list-pane">
+          <div class="pane-head">
+            <input type="text" id="q" placeholder="Search components...">
+            <button class="btn primary" id="newBtn"><span data-ic="plus"></span> New</button>
+          </div>
+          <div class="filters">
+            <div class="seg" id="statusSeg">
+              <button data-status="all" class="on">All<span class="n" id="nAll">0</span></button>
+              <button data-status="published">Published<span class="n" id="nPub">0</span></button>
+              <button data-status="draft">Drafts<span class="n" id="nDraft">0</span></button>
+            </div>
+            <select id="catFilter" title="Category"></select>
+            <select id="sortSel" title="Sort">
+              <option value="new">Newest</option><option value="old">Oldest</option><option value="name">Name A-Z</option>
+            </select>
+            <button class="btn ghost small" id="selectBtn">Select</button>
+          </div>
+          <div id="bulkBar" class="bulk hidden">
+            <b id="bulkCount">0 selected</b>
+            <button class="btn small" id="bulkAll">All</button>
+            <button class="btn small" id="bulkPub">Publish</button>
+            <button class="btn small" id="bulkUnpub">Unpublish</button>
+            <select id="bulkMove"></select>
+            <button class="btn small danger" id="bulkDel">Delete</button>
+          </div>
+          <div id="items" class="items"></div>
+        </aside>
+
+        <section class="pane editor-pane" id="editorPane">
+          <div id="editorEmpty" class="empty">
+            <p style="font-size:16px;font-weight:700">Pick a component, or create one</p>
+            <p style="margin-top:6px">Press <b>New</b>, or open <b>AI Studio</b> to generate several at once.</p>
+          </div>
+
+          <div id="editorForm" class="hidden">
+            <div class="editor-head">
+              <input type="text" id="name" class="title-input" maxlength="50" placeholder="Component name">
+              <div class="status-toggle">
+                <label class="switch"><input type="checkbox" id="published"><span></span></label>
+                <span id="pubLabel">Published</span>
+              </div>
+            </div>
+            <div class="row2" style="margin-top:6px">
+              <div><label class="lab" style="margin-top:6px">Category</label><select id="category"></select></div>
+              <div><label class="lab" style="margin-top:6px">Short description</label><input type="text" id="description" maxlength="100" placeholder="One line about it"></div>
+            </div>
+
+            <div class="tabs">
+              <button class="tab on" data-tab="html">HTML</button>
+              <button class="tab" data-tab="css">CSS</button>
+              <button class="tab" data-tab="js">JS</button>
+            </div>
+            <textarea class="code" id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+
+            <details class="card-box ai-box">
+              <summary><span data-ic="sparkles"></span> Improve this component with AI</summary>
+              <div class="row">
+                <input type="text" id="aiInstruction" placeholder="e.g. add a hover animation and make it dark-mode friendly">
+                <button class="btn primary" id="aiApply">Improve</button>
+              </div>
+              <div class="chips" style="margin-top:10px" id="aiQuick"></div>
+              <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+                <button class="btn small hidden" id="aiUndo">Undo AI change</button>
+                <span class="small-text muted" id="aiStatus"></span>
+              </div>
+            </details>
+
+            <div class="actions">
+              <button class="btn primary" id="saveBtn"><span data-ic="check"></span> Save &amp; publish</button>
+              <button class="btn" id="draftBtn">Save as draft</button>
+              <button class="btn" id="dupBtn">Duplicate</button>
+              <button class="btn" id="copyBtn"><span data-ic="copy"></span> Copy HTML file</button>
+              <button class="btn danger" id="delBtn"><span data-ic="trash"></span> Delete</button>
+            </div>
+
+            <div class="preview-bar">
+              <b>Live preview</b>
+              <div class="seg" id="deviceSeg">
+                <button data-dev="full" class="on">Full</button><button data-dev="tablet">Tablet</button><button data-dev="mobile">Mobile</button>
+              </div>
+              <div class="seg" id="bgSeg">
+                <button data-bg="light" class="on">Light</button><button data-bg="dark">Dark</button><button data-bg="grid">Grid</button>
+              </div>
+              <button class="icon-btn" id="reloadPrev" title="Reload preview"></button>
+              <button class="icon-btn" id="tabPrev" title="Open in new tab"></button>
+            </div>
+            <div class="preview-wrap"><iframe id="preview" sandbox="allow-scripts" title="Preview"></iframe></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ---------------- AI STUDIO ---------------- -->
+    <section id="view-ai" class="view hidden">
+      <div class="split ai-split">
+        <aside class="pane ai-side">
+          <h2>AI Studio</h2>
+          <p class="muted">Describe what you need. Several components are generated at the same time, each one different.</p>
+
+          <label class="lab" for="aiPrompt">What should it make?</label>
+          <textarea id="aiPrompt" rows="4" placeholder="e.g. Pricing cards for a SaaS product with a monthly / yearly toggle"></textarea>
+
+          <div class="row2">
+            <div>
+              <label class="lab">How many: <b id="aiCountVal">3</b></label>
+              <input type="range" id="aiCount" min="1" max="12" value="3" style="width:100%">
+            </div>
+            <div>
+              <label class="lab">Category</label>
+              <select id="aiCategory"></select>
+            </div>
+          </div>
+
+          <label class="lab">Style (optional, pick any)</label>
+          <div class="chips" id="aiStyles"></div>
+
+          <div class="row2">
+            <div>
+              <label class="lab">Colours</label>
+              <select id="aiTheme"><option value="light">Light</option><option value="dark">Dark</option><option value="both">Light + dark</option></select>
+            </div>
+            <div style="padding-top:18px">
+              <label class="small-text" style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" id="aiAnim" checked> Animations</label>
+              <label class="small-text" style="display:flex;gap:6px;align-items:center;margin-top:6px"><input type="checkbox" id="aiImages"> Allow photos</label>
+            </div>
+          </div>
+
+          <label class="lab" for="aiExtra">Extra notes (optional)</label>
+          <input type="text" id="aiExtra" placeholder="brand colour #4f46e5, rounded corners, Urdu text...">
+
+          <div class="notice" id="aiReady" style="margin-top:16px"></div>
+
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button class="btn primary big" id="aiGenerate"><span data-ic="sparkles"></span> Generate</button>
+            <button class="btn big hidden" id="aiCancel" style="width:auto">Stop</button>
+          </div>
+          <p class="small-text muted" style="margin-top:8px">Tip: Ctrl + Enter generates. Failed requests move to the next provider on their own.</p>
+        </aside>
+
+        <section class="pane ai-results">
+          <div class="results-head">
+            <b id="resCount">Results</b>
+            <span class="spacer"></span>
+            <button class="btn small" id="resAll">Select all</button>
+            <button class="btn small" id="resDrafts">Save selected as drafts</button>
+            <button class="btn small primary" id="resPublish">Publish selected</button>
+            <button class="btn small ghost" id="resClear">Clear</button>
+          </div>
+          <div id="results" class="results-grid"></div>
+          <div id="resEmpty" class="empty">Nothing yet. Write a request on the left and press <b>Generate</b>.</div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ---------------- IMAGES ---------------- -->
+    <section id="view-images" class="view hidden">
+      <div class="page">
+        <h2>Images</h2>
+        <p class="muted">Upload a picture, copy its link, and use it in a component: <code>&lt;img src="LINK" alt=""&gt;</code>. The link works for everyone, so it shows inside the app too.</p>
+        <div class="drop" id="drop">Drop images here or <label style="color:var(--accent);cursor:pointer;font-weight:700">choose files<input type="file" id="mediaFile" accept="image/*" multiple style="display:none"></label></div>
+        <div class="media-grid" id="mediaGrid"></div>
+      </div>
+    </section>
+
+    <!-- ---------------- SETTINGS ---------------- -->
+    <section id="view-settings" class="view hidden">
+      <div class="page">
+        <h2>AI Settings</h2>
+        <p class="muted">Add a key for any provider you want to use. Keys are kept <b>only in this browser</b>. They are never written into this file and never sent anywhere except to the provider you choose.</p>
+        <div class="notice">
+          Slow answers? Turn on two or three providers. In <b>Spread</b> mode every component goes to a different provider at the same time, and if one is busy the next one takes over.
+          Press <b>Test all &amp; sort by speed</b> to put the fastest first.
+        </div>
+
+        <div class="card-box" style="margin-top:14px">
+          <div class="row2">
+            <div>
+              <label class="lab" style="margin-top:0">How to use providers</label>
+              <select id="optMode">
+                <option value="spread">Spread: share the work (fastest)</option>
+                <option value="fallback">Fallback: use the first, then the next</option>
+                <option value="single">Only one provider</option>
+              </select>
+            </div>
+            <div>
+              <label class="lab" style="margin-top:0">Provider for "only one"</label>
+              <select id="optSelected"></select>
+            </div>
+          </div>
+          <div class="row2">
+            <div><label class="lab">At the same time (1-6)</label><input type="number" id="optParallel" min="1" max="6"></div>
+            <div><label class="lab">Give up after (seconds)</label><input type="number" id="optTimeout" min="10" max="240"></div>
+          </div>
+          <div class="row2">
+            <div><label class="lab">Max answer size (tokens)</label><input type="number" id="optTokens" min="1000" max="16000" step="500"></div>
+            <div style="padding-top:20px">
+              <label class="small-text" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="optFast"> Fast mode (no extra "thinking" on Gemini)</label>
+              <label class="small-text" style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" id="optRemember"> Remember keys in this browser</label>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">
+            <button class="btn primary" id="testAll">Test all &amp; sort by speed</button>
+            <button class="btn danger" id="clearKeys">Forget all keys</button>
+          </div>
+        </div>
+
+        <div id="provList"></div>
+        <p class="small-text muted" style="margin-top:16px">
+          Anyone who can use this browser profile can read the saved keys. Do not save keys on a shared computer: untick "Remember keys" (they are then dropped when the tab closes).
+          Generated code only ever runs inside a sandboxed preview that cannot read these keys.
+        </p>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="toast"></div>
+
+<script>
+/* =====================================================================
+   CORE: pure logic (no DOM). Tested with node.
+   ===================================================================== */
+
+/* ---------- categories: real kinds of website components ---------- */
+const CATEGORY_GROUPS = [
+  ['Basics', ['Buttons', 'Inputs', 'Forms', 'Toggles & Switches', 'Badges & Tags', 'Alerts & Toasts']],
+  ['Navigation', ['Navbar', 'Sidebar', 'Menus & Dropdowns', 'Tabs & Accordions', 'Pagination', 'Search']],
+  ['Content', ['Hero Sections', 'Cards', 'Galleries', 'Testimonials', 'Pricing', 'Stats', 'Timelines', 'Profiles', 'Tables', 'Footers']],
+  ['Feedback', ['Modals & Popups', 'Tooltips', 'Loaders', 'Animations', 'Progress']],
+  ['Pages', ['Login & Signup', 'Landing Pages', 'Dashboards', 'Chat & Messages', 'E-commerce']],
+  ['Other', ['UI']],
+];
+const CATEGORIES = CATEGORY_GROUPS.flatMap((g) => g[1]);
+
+/* Words people (and models) use  ->  our category. Also maps the old style
+   categories that existed before (Glassmorphism, Neumorphism, ...). */
+const CATEGORY_ALIASES = {
+  'navigation': 'Navbar', 'nav': 'Navbar', 'navigation bar': 'Navbar', 'header': 'Navbar', 'menu': 'Menus & Dropdowns',
+  'templates': 'Landing Pages', 'template': 'Landing Pages', 'landing': 'Landing Pages', 'landing page': 'Landing Pages',
+  'neumorphism': 'UI', 'glassmorphism': 'UI', 'minimal': 'UI', 'gradient': 'UI', 'dark ui': 'UI', 'brutalism': 'UI',
+  'button': 'Buttons', 'cta': 'Buttons', 'input': 'Inputs', 'form': 'Forms', 'toggle': 'Toggles & Switches',
+  'switch': 'Toggles & Switches', 'checkbox': 'Toggles & Switches', 'badge': 'Badges & Tags', 'tag': 'Badges & Tags',
+  'chip': 'Badges & Tags', 'alert': 'Alerts & Toasts', 'toast': 'Alerts & Toasts', 'notification': 'Alerts & Toasts',
+  'sidebar': 'Sidebar', 'drawer': 'Sidebar', 'dropdown': 'Menus & Dropdowns', 'tabs': 'Tabs & Accordions',
+  'tab': 'Tabs & Accordions', 'accordion': 'Tabs & Accordions', 'faq': 'Tabs & Accordions', 'pagination': 'Pagination',
+  'search': 'Search', 'hero': 'Hero Sections', 'card': 'Cards', 'gallery': 'Galleries', 'carousel': 'Galleries',
+  'slider': 'Galleries', 'testimonial': 'Testimonials', 'review': 'Testimonials', 'pricing': 'Pricing', 'price': 'Pricing',
+  'stat': 'Stats', 'counter': 'Stats', 'timeline': 'Timelines', 'profile': 'Profiles', 'team': 'Profiles', 'table': 'Tables',
+  'footer': 'Footers', 'modal': 'Modals & Popups', 'popup': 'Modals & Popups', 'dialog': 'Modals & Popups',
+  'tooltip': 'Tooltips', 'loader': 'Loaders', 'spinner': 'Loaders', 'skeleton': 'Loaders', 'animation': 'Animations',
+  'animated': 'Animations', 'progress': 'Progress', 'login': 'Login & Signup', 'signup': 'Login & Signup',
+  'sign in': 'Login & Signup', 'sign up': 'Login & Signup', 'auth': 'Login & Signup', 'dashboard': 'Dashboards',
+  'admin': 'Dashboards', 'chat': 'Chat & Messages', 'message': 'Chat & Messages', 'shop': 'E-commerce',
+  'product': 'E-commerce', 'cart': 'E-commerce', 'checkout': 'E-commerce', 'ecommerce': 'E-commerce',
+};
+
+function normalizeCategory(value, fallback) {
+  fallback = fallback === undefined ? 'UI' : fallback;
+  const raw = String(value == null ? '' : value).trim();
+  if (!raw) return fallback;
+  const lower = raw.toLowerCase();
+  const exact = CATEGORIES.find((c) => c.toLowerCase() === lower);
+  if (exact) return exact;
+  if (CATEGORY_ALIASES[lower]) return CATEGORY_ALIASES[lower];
+  for (const key of Object.keys(CATEGORY_ALIASES)) {
+    if (key.length > 3 && lower.includes(key)) return CATEGORY_ALIASES[key];
+  }
+  return fallback;
+}
+
+/* ---------- small helpers ---------- */
+const clip = (s, n) => (s.length > n ? s.slice(0, n) : s);
+const asText = (v) => (typeof v === 'string' ? v : v == null ? '' : String(v));
+
+function newId(prefix) {
+  return (prefix || 'c_') + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+/* Models love to write raw line breaks inside JSON strings, which JSON.parse
+   rejects. This walks the text and escapes them. */
+function repairJson(text) {
+  let out = '';
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inString) {
+      if (escaped) { out += ch; escaped = false; continue; }
+      if (ch === '\\') { out += ch; escaped = true; continue; }
+      if (ch === '"') { out += ch; inString = false; continue; }
+      if (ch === '\n') { out += '\\n'; continue; }
+      if (ch === '\r') { continue; }
+      if (ch === '\t') { out += '\\t'; continue; }
+      if (ch.charCodeAt(0) < 0x20) { out += '\\u' + ch.charCodeAt(0).toString(16).padStart(4, '0'); continue; }
+      out += ch;
+    } else {
+      if (ch === '"') inString = true;
+      out += ch;
+    }
+  }
+  return out;
+}
+
+function stripThinking(text) {
+  return asText(text).replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<thinking>[\s\S]*?<\/thinking>/gi, '').trim();
+}
+
+function extractJson(text) {
+  let t = stripThinking(text);
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence && /[\[{]/.test(fence[1])) t = fence[1].trim();
+  const start = t.search(/[\[{]/);
+  if (start < 0) return null;
+  t = t.slice(start);
+  const attempts = [t];
+  const end = Math.max(t.lastIndexOf('}'), t.lastIndexOf(']'));
+  if (end > 0 && end < t.length - 1) attempts.push(t.slice(0, end + 1));
+  for (const candidate of attempts) {
+    for (const fix of [(s) => s, repairJson]) {
+      try { return JSON.parse(fix(candidate)); } catch (_) { /* try next */ }
+    }
+  }
+  return null;
+}
+
+/* If a model returns a whole HTML document, split it into html / css / js. */
+function splitDocument(source) {
+  let css = '';
+  let js = '';
+  let html = source;
+  html = html.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (_, c) => { css += c.trim() + '\n'; return ''; });
+  html = html.replace(/<script(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script>/gi, (_, c) => { js += c.trim() + '\n'; return ''; });
+  const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  if (body) {
+    html = body[1];
+  } else {
+    html = html
+      .replace(/<!doctype[^>]*>/gi, '')
+      .replace(/<title[^>]*>[\s\S]*?<\/title>/gi, '')
+      .replace(/<\/?(html|head|body)[^>]*>/gi, '')
+      .replace(/<meta[^>]*>/gi, '');
+  }
+  return { html: html.trim(), css: css.trim(), js: js.trim() };
+}
+
+function stripFence(code) {
+  return asText(code).replace(/^\s*```[a-z]*\s*\n?/i, '').replace(/\n?```\s*$/i, '');
+}
+
+function normalizeComponent(raw, opts) {
+  opts = opts || {};
+  if (!raw || typeof raw !== 'object') return null;
+  let html = stripFence(raw.html);
+  let css = stripFence(raw.css);
+  let js = stripFence(raw.js);
+  if (/<\/?(html|head|body|style|script)\b/i.test(html)) {
+    const parts = splitDocument(html);
+    html = parts.html;
+    css = [css, parts.css].filter(Boolean).join('\n\n');
+    js = [js, parts.js].filter(Boolean).join('\n\n');
+  }
+  html = html.trim();
+  if (!html) return null;
+  return {
+    id: opts.id || newId(),
+    name: clip(asText(raw.name).trim() || opts.defaultName || 'Untitled component', 50),
+    description: clip(asText(raw.description).trim(), 100),
+    category: normalizeCategory(raw.category, opts.fallbackCategory || 'UI'),
+    html,
+    css: css.trim(),
+    js: js.trim(),
+    published: false,
+  };
+}
+
+function parseModelOutput(text, opts) {
+  opts = opts || {};
+  const data = extractJson(text);
+  let list = [];
+  if (Array.isArray(data)) list = data;
+  else if (data && Array.isArray(data.components)) list = data.components;
+  else if (data && data.component && typeof data.component === 'object') list = [data.component];
+  else if (data && (data.html || data.css)) list = [data];
+
+  if (!list.length) {
+    // Last resort: ```html ... ``` / ```css ... ``` / ```js ... ``` blocks.
+    const blocks = { html: '', css: '', js: '' };
+    const re = /```(html|css|javascript|js)\s*\n([\s\S]*?)```/gi;
+    let m;
+    while ((m = re.exec(asText(text)))) {
+      const key = m[1].toLowerCase() === 'javascript' ? 'js' : m[1].toLowerCase();
+      blocks[key] += m[2].trim() + '\n';
+    }
+    if (blocks.html.trim()) list = [Object.assign({ name: opts.defaultName }, blocks)];
+  }
+  const maxItems = opts.max || 50;
+  return list.slice(0, maxItems).map((c) => normalizeComponent(c, opts)).filter(Boolean);
+}
+
+/* ---------- prompts ---------- */
+const STYLE_OPTIONS = ['Minimal', 'Glassmorphism', 'Neumorphism', 'Gradient', 'Dark', 'Neon', 'Brutalism', 'Material', 'Playful', 'Elegant', 'Retro'];
+const VARIATION_HINTS = [
+  'clean minimal with lots of white space', 'bold colourful gradient', 'glassmorphism over a colourful background',
+  'soft neumorphism with gentle shadows', 'dark mode with neon accents', 'playful rounded shapes with micro-animations',
+  'neo-brutalism with thick borders and hard shadows', 'elegant serif typography with subtle motion', 'flat material design',
+  'retro 90s web look', 'pastel soft palette', 'high-contrast and very accessible',
+];
+
+function buildSystemPrompt(o) {
+  o = o || {};
+  return [
+    'You are a senior front-end designer who builds reusable, production-quality UI components for the Decode component library used on real websites.',
+    '',
+    'Reply with ONLY valid JSON, no markdown fences and no commentary, in exactly this shape:',
+    '{"components":[{"name":"","description":"","category":"","html":"","css":"","js":""}]}',
+    '',
+    'Rules for every component:',
+    '- "html": only the BODY fragment. No <!DOCTYPE>, <html>, <head>, <body>, and no <style> or <script> tags inside it.',
+    '- "css": plain CSS for that fragment. Use CSS variables on :root for colours. Mobile-first and responsive. Include :hover, :focus-visible and :active states where they make sense. If the component needs centring in a preview, style body (display:grid; place-items:center; min-height:100vh; margin:0; font-family:system-ui,sans-serif).',
+    '- "js": small vanilla JavaScript for interactions (empty string when not needed). No libraries, no network calls, no localStorage, no alert().',
+    o.allowImages
+      ? '- Pictures: use CSS gradients, inline SVG or emoji. If a real photo is really needed use https://picsum.photos/seed/<word>/600/400.'
+      : '- No external images, fonts or scripts. For pictures use CSS gradients, inline SVG or emoji.',
+    '- Accessible: semantic tags, labels, aria attributes, good contrast, keyboard friendly.',
+    '- "name" max 40 characters, "description" one short sentence (max 90 characters).',
+    '- "category" must be EXACTLY one of: ' + CATEGORIES.join(', ') + '.',
+    '- Use realistic text (never lorem ipsum). Keep CSS compact (about 120 lines or fewer).',
+  ].join('\n');
+}
+
+function buildUserPrompt(o) {
+  const lines = [];
+  const total = o.total || 1;
+  lines.push(total > 1
+    ? 'Create ONE component. It is number ' + (o.index + 1) + ' of ' + total + ' that must all look clearly different from each other.'
+    : 'Create ONE component.');
+  lines.push('Request: ' + o.prompt.trim());
+  lines.push(o.category && o.category !== 'auto' ? 'Category: ' + o.category : 'Pick the best matching category.');
+  const styles = (o.styles || []).filter(Boolean);
+  if (styles.length) lines.push('Visual style: ' + styles.join(', ') + '.');
+  else if (total > 1) lines.push('Visual style for this one: ' + VARIATION_HINTS[(o.hintIndex == null ? o.index : o.hintIndex) % VARIATION_HINTS.length] + '.');
+  if (o.theme === 'dark') lines.push('Design it for a dark background.');
+  else if (o.theme === 'both') lines.push('Support both light and dark with @media (prefers-color-scheme: dark).');
+  else lines.push('Design it for a light background.');
+  if (o.animations) lines.push('Add tasteful CSS animations or transitions.');
+  if (o.extra) lines.push('Extra notes: ' + o.extra.trim());
+  return lines.join('\n');
+}
+
+function buildImproveUserPrompt(component, instruction) {
+  return [
+    'Improve this existing component. Keep its purpose, and return the COMPLETE updated component (not a diff).',
+    'Instruction: ' + instruction.trim(),
+    '',
+    'Current component:',
+    JSON.stringify({
+      name: component.name, description: component.description, category: component.category,
+      html: component.html, css: component.css, js: component.js,
+    }),
+  ].join('\n');
+}
+
+/* ---------- AI providers ---------- */
+const PROVIDERS = {
+  gemini: {
+    label: 'Google Gemini', kind: 'gemini', base: 'https://generativelanguage.googleapis.com/v1beta',
+    models: ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'],
+    keyUrl: 'https://aistudio.google.com/apikey', maxParallel: 2,
+    note: 'Free tier. Limits change often. The "flash-lite" models are the fastest.',
+  },
+  groq: {
+    label: 'Groq', kind: 'openai', base: 'https://api.groq.com/openai/v1',
+    models: ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3-32b', 'llama-3.1-8b-instant'],
+    keyUrl: 'https://console.groq.com/keys', maxParallel: 2,
+    note: 'Free and very fast. Small tokens-per-minute limit, so only 2 requests run at once.',
+  },
+  openrouter: {
+    label: 'OpenRouter (free models)', kind: 'openai', base: 'https://openrouter.ai/api/v1',
+    models: ['qwen/qwen3-coder:free', 'openai/gpt-oss-120b:free', 'meta-llama/llama-3.3-70b-instruct:free'],
+    keyUrl: 'https://openrouter.ai/keys', maxParallel: 2, listFree: true,
+    note: 'Many ":free" models. That list changes often: press "Load models".',
+  },
+  mistral: {
+    label: 'Mistral', kind: 'openai', base: 'https://api.mistral.ai/v1',
+    models: ['mistral-small-latest', 'codestral-latest', 'mistral-large-latest'],
+    keyUrl: 'https://console.mistral.ai/api-keys', maxParallel: 2,
+    note: 'Has a free plan. The browser may block direct calls (CORS): if so, use another provider.',
+  },
+  cerebras: {
+    label: 'Cerebras (very fast)', kind: 'openai', base: 'https://api.cerebras.ai/v1',
+    models: ['gpt-oss-120b', 'qwen-3-32b', 'llama-3.3-70b'],
+    keyUrl: 'https://cloud.cerebras.ai/', maxParallel: 3,
+    note: 'Fastest of all, but its open free tier ended in 2026 (starter credit only).',
+  },
+  custom: {
+    label: 'Custom (OpenAI-compatible)', kind: 'openai', base: '', models: [], editableBase: true, keyOptional: true, maxParallel: 2,
+    note: 'Any OpenAI-style endpoint: SambaNova, NVIDIA, Together, a local Ollama, ...',
+  },
+};
+const PROVIDER_ORDER = ['gemini', 'groq', 'openrouter', 'cerebras', 'mistral', 'custom'];
+
+function defaultAiSettings() {
+  const providers = {};
+  for (const id of PROVIDER_ORDER) {
+    providers[id] = { enabled: false, key: '', model: PROVIDERS[id].models[0] || '', base: '' };
+  }
+  return {
+    remember: true, mode: 'spread', selected: 'gemini', concurrency: 3, timeoutSec: 75,
+    maxTokens: 4500, fast: true, order: PROVIDER_ORDER.slice(), providers,
+  };
+}
+
+function mergeAiSettings(saved) {
+  const defaults = defaultAiSettings();
+  if (!saved || typeof saved !== 'object') return defaults;
+  const providers = defaults.providers;
+  const out = Object.assign(defaults, saved);
+  out.providers = providers;
+  for (const id of PROVIDER_ORDER) {
+    if (saved.providers && saved.providers[id]) Object.assign(providers[id], saved.providers[id]);
+  }
+  const known = (Array.isArray(saved.order) ? saved.order : []).filter((id) => PROVIDER_ORDER.includes(id));
+  out.order = known.concat(PROVIDER_ORDER.filter((id) => !known.includes(id)));
+  return out;
+}
+
+function providerReady(id, cfg) {
+  if (!cfg || !cfg.enabled) return false;
+  const p = PROVIDERS[id];
+  if (p.editableBase && !cfg.base) return false;
+  return !!(cfg.key || p.keyOptional);
+}
+
+function buildRequest(id, cfg, system, user, o) {
+  const p = PROVIDERS[id];
+  const model = cfg.model || p.models[0];
+  if (p.kind === 'gemini') {
+    const gen = { temperature: o.temperature == null ? 0.85 : o.temperature, maxOutputTokens: o.maxTokens };
+    if (!o.noJson) gen.responseMimeType = 'application/json';
+    if (o.fast && !o.noThinking && /flash/i.test(model)) gen.thinkingConfig = { thinkingBudget: 0 };
+    return {
+      url: p.base + '/models/' + encodeURIComponent(model) + ':generateContent',
+      init: {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.key },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: system }] },
+          contents: [{ role: 'user', parts: [{ text: user }] }],
+          generationConfig: gen,
+        }),
+      },
+    };
+  }
+  const base = (p.editableBase ? cfg.base : p.base).replace(/\/+$/, '');
+  const body = {
+    model,
+    messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+    temperature: o.temperature == null ? 0.85 : o.temperature,
+    max_tokens: o.maxTokens,
+  };
+  if (!o.noJson) body.response_format = { type: 'json_object' };
+  const headers = { 'Content-Type': 'application/json' };
+  if (cfg.key) headers.Authorization = 'Bearer ' + cfg.key;
+  return { url: base + '/chat/completions', init: { method: 'POST', headers, body: JSON.stringify(body) } };
+}
+
+function readResponse(kind, data) {
+  if (kind === 'gemini') {
+    const block = data && data.promptFeedback && data.promptFeedback.blockReason;
+    if (block) throw makeError('bad', 'Blocked by the model (' + block + ')');
+    const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+    return Array.isArray(parts) ? parts.map((p) => p.text || '').join('') : '';
+  }
+  const msg = data && data.choices && data.choices[0] && data.choices[0].message;
+  if (!msg) return '';
+  if (Array.isArray(msg.content)) return msg.content.map((p) => p.text || '').join('');
+  return asText(msg.content);
+}
+
+function makeError(kind, message) {
+  const e = new Error(message);
+  e.kind = kind;
+  return e;
+}
+
+function errorKind(status, bodyText) {
+  const t = asText(bodyText);
+  if (status === 429 || /quota|rate.?limit|RESOURCE_EXHAUSTED|too many requests/i.test(t)) return 'rate';
+  if (status === 401 || status === 403) return 'auth';
+  if (status === 404) return 'model';
+  if (status >= 500) return 'server';
+  return 'bad';
+}
+
+function messageFromBody(text) {
+  try {
+    const j = JSON.parse(text);
+    const m = (j.error && (j.error.message || j.error)) || j.message || j.detail;
+    if (m) return clip(typeof m === 'string' ? m : JSON.stringify(m), 220);
+  } catch (_) { /* not JSON */ }
+  return clip(asText(text).replace(/\s+/g, ' ').trim(), 220) || 'Request failed';
+}
+
+async function callProvider(fetchImpl, id, cfg, system, user, o) {
+  const p = PROVIDERS[id];
+  const opts = Object.assign({}, o);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const req = buildRequest(id, cfg, system, user, opts);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), (opts.timeoutSec || 75) * 1000);
+    const outer = opts.signal;
+    const onOuterAbort = () => ctrl.abort();
+    if (outer) {
+      if (outer.aborted) { clearTimeout(timer); throw makeError('cancel', 'Cancelled'); }
+      outer.addEventListener('abort', onOuterAbort, { once: true });
+    }
+    let res;
+    let text;
+    try {
+      res = await fetchImpl(req.url, Object.assign({}, req.init, { signal: ctrl.signal }));
+      text = await res.text();
+    } catch (e) {
+      if (outer && outer.aborted) throw makeError('cancel', 'Cancelled');
+      if (e && e.name === 'AbortError') throw makeError('timeout', 'Took longer than ' + (opts.timeoutSec || 75) + 's');
+      throw makeError('network', 'Network or CORS error (the browser may block this provider)');
+    } finally {
+      clearTimeout(timer);
+      if (outer) outer.removeEventListener('abort', onOuterAbort);
+    }
+
+    if (res.ok) {
+      let data;
+      try { data = JSON.parse(text); } catch (_) { throw makeError('bad', 'The provider did not return JSON'); }
+      const out = readResponse(p.kind, data);
+      if (!out || !out.trim()) throw makeError('empty', 'Empty answer');
+      return out;
+    }
+    if (res.status === 400 && attempt < 2) {
+      if (!opts.noThinking && /thinking/i.test(text)) { opts.noThinking = true; continue; }
+      if (!opts.noJson) { opts.noJson = true; continue; }
+    }
+    throw makeError(errorKind(res.status, text), messageFromBody(text));
+  }
+  throw makeError('bad', 'Request failed');
+}
+
+/* Which providers to try, in order, for one request. */
+function planProviders(o) {
+  const ready = o.order.filter((id) => providerReady(id, o.providers[id]));
+  let list = ready;
+  if (o.mode === 'single') {
+    list = ready.includes(o.selected) ? [o.selected] : ready.slice(0, 1);
+  } else if (o.mode === 'spread' && ready.length) {
+    const k = o.index % ready.length;
+    list = ready.slice(k).concat(ready.slice(0, k));
+  }
+  const cooldown = o.cooldown || {};
+  const now = o.now || Date.now();
+  const hot = list.filter((id) => (cooldown[id] || 0) <= now);
+  const cold = list.filter((id) => (cooldown[id] || 0) > now);
+  return hot.concat(cold);
+}
+
+/* Try the planned providers one after another until one gives usable
+   components. Returns { components, providerId, model, ms, attempts }. */
+async function generateWithFallback(o) {
+  const attempts = [];
+  for (const id of o.plan) {
+    const cfg = o.providers[id];
+    const started = Date.now();
+    try {
+      const text = await o.call(id, cfg);
+      const components = parseModelOutput(text, o.parse);
+      if (!components.length) throw makeError('bad', 'Could not read the answer');
+      return { components, providerId: id, model: cfg.model, ms: Date.now() - started, attempts };
+    } catch (e) {
+      if (e.kind === 'cancel') throw e;
+      attempts.push({ id, kind: e.kind || 'bad', message: e.message });
+      if (o.onFail) o.onFail(id, e);
+    }
+  }
+  const last = attempts[attempts.length - 1];
+  const err = makeError(last ? last.kind : 'bad', last ? PROVIDERS[last.id].label + ': ' + last.message : 'No provider is ready. Add an API key in Settings.');
+  err.attempts = attempts;
+  throw err;
+}
+
+async function runPool(limit, tasks) {
+  let next = 0;
+  const worker = async () => {
+    while (next < tasks.length) {
+      const i = next++;
+      await tasks[i]();
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(Math.max(1, limit), tasks.length) }, worker));
+}
+
+/* Allow only N running calls per provider. */
+function createLimiter(limitFor) {
+  const running = {};
+  const waiting = {};
+  const release = (id) => {
+    running[id]--;
+    const q = waiting[id];
+    if (q && q.length) { running[id]++; q.shift()(); }
+  };
+  return async function run(id, fn) {
+    running[id] = running[id] || 0;
+    waiting[id] = waiting[id] || [];
+    if (running[id] >= limitFor(id)) await new Promise((resolve) => waiting[id].push(resolve));
+    else running[id]++;
+    try { return await fn(); } finally { release(id); }
+  };
+}
+
+/* ---------- model lists ---------- */
+function parseModelList(id, data) {
+  if (PROVIDERS[id].kind === 'gemini') {
+    return (data.models || [])
+      .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent') && /^models\/gemini/.test(m.name))
+      .map((m) => m.name.replace(/^models\//, ''));
+  }
+  let list = data.data || data.models || [];
+  if (PROVIDERS[id].listFree) {
+    list = list.filter((m) => (m.pricing && String(m.pricing.prompt) === '0' && String(m.pricing.completion) === '0') || /:free$/.test(m.id));
+  }
+  return list.map((m) => m.id || m.name).filter(Boolean).sort();
+}
+
+/* =====================================================================
+   APP
+   ===================================================================== */
+
+/* Public connection values. The publishable key is meant to be public;
+   data is protected by Row Level Security + the admin login.
+   NEVER paste a "secret" / "service_role" key here. */
+const SUPABASE_URL = 'https://khuxfcikhugzylckqfny.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_sOG-7fbHdU6AipliJh6WDg_4D_hq486';
+const REST = SUPABASE_URL + '/rest/v1/components';
+const STORAGE = SUPABASE_URL + '/storage/v1';
+const BUCKET = 'assets';
+const AI_STORE_KEY = 'decode_admin_ai_v1';
+
+const $ = (id) => document.getElementById(id);
+
+/* Small DOM helper: text always goes in as text, never as HTML. */
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, '');
+    else e.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    e.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return e;
+}
+
+/* ---------- icons (inline SVG) ---------- */
+const ICONS = {
+  plus: '<path d="M12 5v14M5 12h14"/>', x: '<path d="M18 6 6 18M6 6l12 12"/>', check: '<path d="M20 6 9 17l-5-5"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>', refresh: '<path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  sparkles: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
+  sliders: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+  moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  external: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>',
+};
+function icon(name) {
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('viewBox', '0 0 24 24');
+  s.setAttribute('class', 'ic');
+  s.innerHTML = ICONS[name] || '';
+  return s;
+}
+function paintIcons(root) {
+  (root || document).querySelectorAll('[data-ic]').forEach((n) => {
+    if (!n.firstChild) n.append(icon(n.dataset.ic));
+  });
+}
+const LOGO = '<svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#lg)"/><path d="M10 8h6a8 8 0 0 1 0 16h-6" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/* ---------- theme + toast ---------- */
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem('decode_admin_theme', theme);
+  const b = $('themeBtn');
+  b.textContent = '';
+  b.append(icon(theme === 'dark' ? 'sun' : 'moon'));
+}
+let toastTimer;
+function toast(message) {
+  const el = $('toast');
+  el.textContent = message;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3600);
+}
+async function copyText(text, message) {
+  try { await navigator.clipboard.writeText(text); toast(message || 'Copied'); }
+  catch (_) { window.prompt('Copy this:', text); }
+}
+const escapeAttr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+const fmtDate = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }); };
+
+/* =====================================================================
+   SUPABASE (login, components table, image storage)
+   ===================================================================== */
+const state = {
+  session: null, rows: [], current: null, isNew: false, dirty: false, tab: 'html', view: 'components',
+  filter: { status: 'all', category: 'all', q: '', sort: 'new' },
+  selecting: false, selected: new Set(), device: 'full', bg: 'light', aiUndo: null,
+  ai: mergeAiSettings(null), cooldown: {}, results: [], generating: false, abort: null, batch: 0,
+};
+
+function apiHeaders(extra) {
+  const headers = { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' };
+  if (state.session) headers.Authorization = 'Bearer ' + state.session.access_token;
+  else if (SUPABASE_KEY.startsWith('eyJ')) headers.Authorization = 'Bearer ' + SUPABASE_KEY;
+  return Object.assign(headers, extra || {});
+}
+async function readError(response, fallback) {
+  try {
+    const body = await response.json();
+    return body.message || body.msg || body.error_description || body.error || fallback;
+  } catch (_) { return fallback + ' (' + response.status + ')'; }
+}
+
+function storeSession(data, email, keep) {
+  state.session = {
+    access_token: data.access_token, refresh_token: data.refresh_token,
+    expires_at: Date.now() + (data.expires_in || 3600) * 1000,
+    email: (data.user && data.user.email) || email,
+  };
+  const json = JSON.stringify(state.session);
+  if (keep === undefined) keep = !!localStorage.getItem('decode_admin_session');
+  (keep ? localStorage : sessionStorage).setItem('decode_admin_session', json);
+  (keep ? sessionStorage : localStorage).removeItem('decode_admin_session');
+}
+async function ensureFreshSession() {
+  if (!state.session) throw new Error('Please log in.');
+  if (Date.now() < state.session.expires_at - 60000) return;
+  const response = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+    method: 'POST', headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: state.session.refresh_token }),
+  });
+  if (!response.ok) { logout(); throw new Error('Session expired. Please log in again.'); }
+  storeSession(await response.json(), state.session.email);
+}
+async function login() {
+  $('loginError').textContent = '';
+  const email = $('email').value.trim();
+  const password = $('password').value;
+  if (!email || !password) { $('loginError').textContent = 'Enter email and password.'; return; }
+  $('loginBtn').disabled = true;
+  try {
+    const response = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST', headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!response.ok) throw new Error(await readError(response, 'Could not log in'));
+    storeSession(await response.json(), email, $('keepLogin').checked);
+    $('password').value = '';
+    await showApp();
+  } catch (e) {
+    $('loginError').textContent = e.message || 'Could not log in.';
+  } finally { $('loginBtn').disabled = false; }
+}
+function logout() {
+  state.session = null; state.rows = []; state.current = null;
+  sessionStorage.removeItem('decode_admin_session');
+  localStorage.removeItem('decode_admin_session');
+  $('shell').classList.add('hidden');
+  $('loginView').classList.remove('hidden');
+}
+
+async function loadRows() {
+  await ensureFreshSession();
+  const response = await fetch(REST + '?select=*&order=updated_at.desc&limit=1000', { headers: apiHeaders() });
+  if (response.status === 401) { logout(); throw new Error('Session expired. Please log in again.'); }
+  if (!response.ok) throw new Error(await readError(response, 'Could not load components'));
+  const rows = await response.json();
+  state.rows = rows.map((r) => Object.assign({}, r, { category: normalizeCategory(r.category) }));
+  renderFilters();
+  renderList();
+}
+const toRow = (c) => ({
+  id: c.id, name: c.name.trim(), description: (c.description || '').trim(), category: c.category,
+  html: c.html, css: c.css || '', js: c.js || '', published: !!c.published,
+});
+async function upsert(list) {
+  await ensureFreshSession();
+  const response = await fetch(REST + '?on_conflict=id', {
+    method: 'POST', headers: apiHeaders({ Prefer: 'resolution=merge-duplicates,return=minimal' }),
+    body: JSON.stringify(list.map(toRow)),
+  });
+  if (!response.ok) throw new Error(await readError(response, 'Could not save'));
+}
+const idFilter = (ids) => '?id=in.(' + ids.map(encodeURIComponent).join(',') + ')';
+async function patchMany(ids, body) {
+  await ensureFreshSession();
+  const response = await fetch(REST + idFilter(ids), {
+    method: 'PATCH', headers: apiHeaders({ Prefer: 'return=minimal' }),
+    body: JSON.stringify(Object.assign({ updated_at: new Date().toISOString() }, body)),
+  });
+  if (!response.ok) throw new Error(await readError(response, 'Could not update'));
+}
+async function deleteMany(ids) {
+  await ensureFreshSession();
+  const response = await fetch(REST + idFilter(ids), { method: 'DELETE', headers: apiHeaders({ Prefer: 'return=minimal' }) });
+  if (!response.ok) throw new Error(await readError(response, 'Could not delete'));
+}
+
+/* =====================================================================
+   COMPONENTS VIEW
+   ===================================================================== */
+function singleFile(c) {
+  const style = c.css && c.css.trim() ? '  <style>\n' + c.css.trim().replace(/^/gm, '    ') + '\n  </style>\n' : '';
+  const script = c.js && c.js.trim() ? '  <script>\n' + c.js.trim().replace(/^/gm, '    ') + '\n  <\/script>\n' : '';
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>' +
+    (c.name || 'Component').replace(/[<>&]/g, '') + '</title>\n' + style + '</head>\n<body>\n' + (c.html || '') + '\n' + script + '</body>\n</html>\n';
+}
+function buildDocument(c, bg) {
+  const base = bg === 'dark' ? 'html{background:#0e1015;color:#e9eaef}'
+    : bg === 'grid' ? 'html{background-color:#f4f4f5;background-image:linear-gradient(45deg,#e4e4e7 25%,transparent 25%,transparent 75%,#e4e4e7 75%),linear-gradient(45deg,#e4e4e7 25%,transparent 25%,transparent 75%,#e4e4e7 75%);background-size:20px 20px;background-position:0 0,10px 10px}'
+      : 'html{background:#fff}';
+  const style = c.css && c.css.trim() ? '<style>\n' + c.css + '\n</style>' : '';
+  const script = c.js && c.js.trim() ? '<script>\n' + c.js.replace(/<\/script/gi, '<\\/script') + '\n<\/script>' : '';
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>' + base + '</style>' +
+    style + '</head><body>\n' + (c.html || '') + '\n' + script + '</body></html>';
+}
+/* A new tab must NOT show generated code in this page's own origin (it could
+   read the saved keys), so the code is wrapped in a sandboxed iframe. */
+function openPreviewTab(doc, title) {
+  const w = window.open('', '_blank');
+  if (!w) { toast('Allow pop-ups to open the preview.'); return; }
+  w.document.write('<!DOCTYPE html><title>' + (title || 'Preview').replace(/[<>&]/g, '') + '</title><style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%}</style><iframe sandbox="allow-scripts" srcdoc="' + escapeAttr(doc) + '"></iframe>');
+  w.document.close();
+}
+
+/* ---- filters + list ---- */
+function renderFilters() {
+  const rows = state.rows;
+  $('nAll').textContent = rows.length;
+  $('nPub').textContent = rows.filter((r) => r.published).length;
+  $('nDraft').textContent = rows.filter((r) => !r.published).length;
+
+  const sel = $('catFilter');
+  const keep = state.filter.category;
+  sel.textContent = '';
+  sel.append(h('option', { value: 'all', text: 'All categories (' + rows.length + ')' }));
+  for (const [group, cats] of CATEGORY_GROUPS) {
+    const og = h('optgroup', { label: group });
+    for (const c of cats) {
+      const n = rows.filter((r) => r.category === c).length;
+      if (n || c === keep) og.append(h('option', { value: c, text: c + ' (' + n + ')' }));
+    }
+    if (og.children.length) sel.append(og);
+  }
+  sel.value = keep;
+  if (sel.value !== keep) { state.filter.category = 'all'; sel.value = 'all'; }
+}
+function visibleRows() {
+  const f = state.filter;
+  const q = f.q.trim().toLowerCase();
+  let list = state.rows.filter((r) =>
+    (f.status === 'all' || (f.status === 'published') === !!r.published) &&
+    (f.category === 'all' || r.category === f.category) &&
+    (!q || (r.name || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q) || r.category.toLowerCase().includes(q)));
+  if (f.sort === 'name') list = list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  else if (f.sort === 'old') list = list.sort((a, b) => String(a.updated_at).localeCompare(String(b.updated_at)));
+  else list = list.sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)));
+  return list;
+}
+function renderList() {
+  const box = $('items');
+  box.textContent = '';
+  const list = visibleRows();
+  if (!list.length) {
+    box.append(h('div', { class: 'empty', text: state.rows.length ? 'No components match these filters.' : 'Nothing here yet. Press New or use AI Studio.' }));
+  }
+  for (const row of list) {
+    const active = state.current && state.current.id === row.id;
+    const item = h('div', { class: 'item' + (active ? ' active' : '') },
+      state.selecting ? h('input', {
+        type: 'checkbox', checked: state.selected.has(row.id),
+        onclick: (e) => { e.stopPropagation(); toggleSelected(row.id, e.target.checked); },
+      }) : null,
+      h('div', { style: 'min-width:0' },
+        h('div', { class: 'name', text: row.name || '(no name)' }),
+        h('div', { class: 'meta' },
+          h('span', { class: 'badge ' + (row.published ? 'pub' : 'draft'), text: row.published ? 'Published' : 'Draft' }),
+          h('span', { text: row.category }), h('span', { text: fmtDate(row.updated_at) }))));
+    item.addEventListener('click', () => {
+      if (state.selecting) { toggleSelected(row.id, !state.selected.has(row.id)); return; }
+      openComponent(row, false);
+    });
+    box.append(item);
+  }
+  $('bulkCount').textContent = state.selected.size + ' selected';
+}
+function toggleSelected(id, on) {
+  if (on) state.selected.add(id); else state.selected.delete(id);
+  renderList();
+}
+function setSelecting(on) {
+  state.selecting = on; state.selected.clear();
+  $('bulkBar').classList.toggle('hidden', !on);
+  $('selectBtn').textContent = on ? 'Done' : 'Select';
+  renderList();
+}
+async function bulk(action) {
+  const ids = [...state.selected];
+  if (!ids.length) { toast('Select some components first.'); return; }
+  try {
+    if (action === 'publish') await patchMany(ids, { published: true });
+    else if (action === 'unpublish') await patchMany(ids, { published: false });
+    else if (action === 'delete') {
+      if (!confirm('Delete ' + ids.length + ' components for everyone? This cannot be undone.')) return;
+      await deleteMany(ids);
+      if (state.current && ids.includes(state.current.id)) { state.current = null; showEditor(false); }
+    } else if (action.startsWith('move:')) await patchMany(ids, { category: action.slice(5) });
+    toast('Done');
+    state.selected.clear();
+    await loadRows();
+  } catch (e) { toast(e.message || 'Something went wrong.'); }
+}
+
+/* ---- editor ---- */
+function categorySelect(select, withAuto) {
+  select.textContent = '';
+  if (withAuto) select.append(h('option', { value: 'auto', text: 'Auto (AI decides)' }));
+  for (const [group, cats] of CATEGORY_GROUPS) {
+    select.append(h('optgroup', { label: group }, cats.map((c) => h('option', { value: c, text: c }))));
+  }
+}
+function showEditor(on) {
+  $('editorEmpty').classList.toggle('hidden', on);
+  $('editorForm').classList.toggle('hidden', !on);
+}
+function blankComponent() {
+  return { id: newId(), name: '', description: '', category: 'UI', html: '', css: '', js: '', published: true };
+}
+function openComponent(c, isNew) {
+  if (state.dirty && state.current && !confirm('You have unsaved changes. Open another component anyway?')) return;
+  setView('components');
+  state.current = Object.assign({}, c);
+  state.isNew = isNew;
+  state.dirty = false;
+  state.aiUndo = null;
+  fillForm();
+}
+function fillForm() {
+  const c = state.current;
+  showEditor(true);
+  $('name').value = c.name || '';
+  $('description').value = c.description || '';
+  $('category').value = normalizeCategory(c.category);
+  $('published').checked = c.published !== false;
+  $('pubLabel').textContent = $('published').checked ? 'Published' : 'Draft';
+  state.tab = 'html';
+  showTab();
+  $('aiUndo').classList.add('hidden');
+  $('aiStatus').textContent = '';
+  renderList();
+  renderPreview();
+}
+function syncFromForm() {
+  const c = state.current;
+  c.name = $('name').value;
+  c.description = $('description').value;
+  c.category = $('category').value;
+  c.published = $('published').checked;
+  c[state.tab] = $('code').value;
+}
+function showTab() {
+  document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === state.tab));
+  $('code').value = state.current ? state.current[state.tab] || '' : '';
+}
+function setTab(next) {
+  if (state.current) state.current[state.tab] = $('code').value;
+  state.tab = next;
+  showTab();
+}
+let previewTimer;
+function renderPreview() {
+  if (!state.current) return;
+  state.current[state.tab] = $('code').value;
+  const widths = { full: '100%', tablet: '768px', mobile: '375px' };
+  $('preview').style.width = widths[state.device];
+  $('preview').srcdoc = buildDocument(state.current, state.bg);
+}
+async function saveCurrent(published) {
+  syncFromForm();
+  const c = state.current;
+  if (!c.name.trim()) { toast('Enter a name first.'); return; }
+  if (!c.html.trim()) { toast('The HTML tab is empty.'); return; }
+  c.published = published;
+  $('published').checked = published;
+  $('pubLabel').textContent = published ? 'Published' : 'Draft';
+  setBusy(['saveBtn', 'draftBtn'], true);
+  try {
+    await upsert([c]);
+    state.dirty = false; state.isNew = false;
+    toast(published ? 'Saved. It is live in the app now.' : 'Saved as draft (hidden from the app).');
+    await loadRows();
+  } catch (e) { toast(e.message || 'Could not save.'); }
+  finally { setBusy(['saveBtn', 'draftBtn'], false); }
+}
+const setBusy = (ids, on) => ids.forEach((id) => { $(id).disabled = on; });
+async function deleteCurrent() {
+  if (!state.current) return;
+  if (state.isNew) { state.current = null; state.dirty = false; showEditor(false); renderList(); return; }
+  if (!confirm('Delete "' + state.current.name + '" for everyone? This cannot be undone.')) return;
+  try {
+    await deleteMany([state.current.id]);
+    toast('Deleted.');
+    state.current = null; state.dirty = false;
+    showEditor(false);
+    await loadRows();
+  } catch (e) { toast(e.message || 'Could not delete.'); }
+}
+
+/* ---- improve with AI ---- */
+const QUICK_AI = ['Make it responsive', 'Add a hover animation', 'Support dark mode', 'Improve accessibility', 'Make it more modern', 'Add a glass effect', 'Simplify the CSS'];
+async function improveCurrent(instruction) {
+  syncFromForm();
+  const c = state.current;
+  if (!instruction.trim()) { toast('Write what to improve first.'); return; }
+  const ready = state.ai.order.filter((id) => providerReady(id, state.ai.providers[id]));
+  if (!ready.length) { toast('Add an AI key in AI Settings first.'); setView('settings'); return; }
+  $('aiApply').disabled = true;
+  $('aiStatus').textContent = 'Working...';
+  try {
+    const result = await requestComponents({
+      user: buildImproveUserPrompt(c, instruction), index: 0, mode: 'fallback', fallbackCategory: c.category, defaultName: c.name,
+    });
+    const next = result.components[0];
+    state.aiUndo = { name: c.name, description: c.description, html: c.html, css: c.css, js: c.js };
+    c.html = next.html; c.css = next.css; c.js = next.js;
+    if (next.name && next.name !== 'Untitled component') c.name = next.name;
+    if (next.description) c.description = next.description;
+    state.dirty = true;
+    fillForm();
+    $('aiUndo').classList.remove('hidden');
+    $('aiStatus').textContent = 'Done with ' + PROVIDERS[result.providerId].label + ' in ' + (result.ms / 1000).toFixed(1) + 's';
+  } catch (e) {
+    $('aiStatus').textContent = '';
+    toast(e.message || 'AI could not improve it.');
+  } finally { $('aiApply').disabled = false; }
+}
+
+/* =====================================================================
+   AI: settings storage, one request helper, provider cards
+   ===================================================================== */
+function loadAi() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(AI_STORE_KEY) || sessionStorage.getItem(AI_STORE_KEY) || 'null'); } catch (_) { /* start fresh */ }
+  state.ai = mergeAiSettings(saved);
+}
+let aiSaveTimer;
+function saveAi() {
+  clearTimeout(aiSaveTimer);
+  aiSaveTimer = setTimeout(() => {
+    const json = JSON.stringify(state.ai);
+    if (state.ai.remember) { localStorage.setItem(AI_STORE_KEY, json); sessionStorage.removeItem(AI_STORE_KEY); }
+    else { sessionStorage.setItem(AI_STORE_KEY, json); localStorage.removeItem(AI_STORE_KEY); }
+  }, 250);
+}
+const readyProviders = () => state.ai.order.filter((id) => providerReady(id, state.ai.providers[id]));
+const limiter = createLimiter((id) => Math.max(1, Math.min(PROVIDERS[id].maxParallel, state.ai.concurrency)));
+
+async function requestComponents(o) {
+  const ai = state.ai;
+  const plan = planProviders({
+    order: ai.order, providers: ai.providers, mode: o.mode || ai.mode, selected: ai.selected,
+    index: o.index || 0, cooldown: state.cooldown,
+  });
+  const system = buildSystemPrompt({ allowImages: !!o.allowImages });
+  return generateWithFallback({
+    plan, providers: ai.providers,
+    parse: { fallbackCategory: o.fallbackCategory || 'UI', defaultName: o.defaultName, max: 1 },
+    call: (id, cfg) => limiter(id, () => callProvider(window.fetch.bind(window), id, cfg, system, o.user, {
+      maxTokens: ai.maxTokens, timeoutSec: ai.timeoutSec, fast: ai.fast, signal: o.signal,
+    })),
+    onFail: (id, e) => {
+      if (e.kind === 'rate') state.cooldown[id] = Date.now() + 60000;
+      if (o.onFail) o.onFail(id, e);
+    },
+  });
+}
+
+async function loadModels(id) {
+  const p = PROVIDERS[id];
+  const cfg = state.ai.providers[id];
+  if (!cfg.key && !p.listFree && !p.keyOptional) { toast('Add the API key first.'); return; }
+  try {
+    let url;
+    let init = {};
+    if (p.kind === 'gemini') { url = p.base + '/models?pageSize=200'; init = { headers: { 'x-goog-api-key': cfg.key } }; }
+    else {
+      const base = (p.editableBase ? cfg.base : p.base).replace(/\/+$/, '');
+      if (!base) { toast('Enter the base URL first.'); return; }
+      url = base + '/models';
+      init = { headers: cfg.key ? { Authorization: 'Bearer ' + cfg.key } : {} };
+    }
+    const res = await fetch(url, init);
+    if (!res.ok) throw new Error(await readError(res, 'Could not load models'));
+    const names = parseModelList(id, await res.json());
+    const list = $('models-' + id);
+    list.textContent = '';
+    names.forEach((n) => list.append(h('option', { value: n })));
+    toast(names.length + ' models loaded. Click the model box to choose.');
+  } catch (e) {
+    toast(e instanceof TypeError ? 'Network or CORS error: this provider may not allow browser calls.' : e.message);
+  }
+}
+async function testProvider(id) {
+  const cfg = state.ai.providers[id];
+  const el = $('ms-' + id) || document.createElement('span');
+  if (!providerReady(id, Object.assign({}, cfg, { enabled: true }))) { toast('Add the key first.'); return Infinity; }
+  el.className = 'ms'; el.textContent = 'testing...';
+  const started = Date.now();
+  try {
+    await callProvider(window.fetch.bind(window), id, Object.assign({}, cfg), 'Reply with JSON only.', 'Return {"ok":true}', { maxTokens: 80, timeoutSec: 30, fast: true, temperature: 0 });
+    const ms = Date.now() - started;
+    el.className = 'ms ok'; el.textContent = (ms / 1000).toFixed(1) + 's  OK';
+    return ms;
+  } catch (e) {
+    el.className = 'ms bad'; el.textContent = e.message.slice(0, 90);
+    return Infinity;
+  }
+}
+async function testAll() {
+  const ids = state.ai.order.filter((id) => providerReady(id, Object.assign({}, state.ai.providers[id], { enabled: true })));
+  if (!ids.length) { toast('Add at least one API key first.'); return; }
+  $('testAll').disabled = true;
+  const times = await Promise.all(ids.map(async (id) => [id, await testProvider(id)]));
+  const sorted = times.slice().sort((a, b) => a[1] - b[1]);
+  const rest = state.ai.order.filter((id) => !ids.includes(id));
+  state.ai.order = sorted.map((x) => x[0]).concat(rest);
+  sorted.forEach(([id, ms]) => { if (ms !== Infinity) state.ai.providers[id].enabled = true; });
+  saveAi();
+  renderSettings();
+  sorted.forEach(([id, ms]) => {
+    const el = $('ms-' + id);
+    if (el && ms !== Infinity) { el.className = 'ms ok'; el.textContent = (ms / 1000).toFixed(1) + 's  OK'; }
+  });
+  $('testAll').disabled = false;
+  toast(sorted[0][1] === Infinity ? 'No provider answered. Check the keys.' : 'Fastest first: ' + PROVIDERS[sorted[0][0]].label);
+}
+
+function providerCard(id) {
+  const p = PROVIDERS[id];
+  const cfg = state.ai.providers[id];
+  const order = state.ai.order;
+  const i = order.indexOf(id);
+  const move = (d) => {
+    const j = i + d;
+    if (j < 0 || j >= order.length) return;
+    [order[i], order[j]] = [order[j], order[i]];
+    saveAi(); renderSettings();
+  };
+  const keyInput = h('input', {
+    type: 'password', placeholder: p.keyOptional ? 'API key (optional)' : 'Paste API key', value: cfg.key,
+    autocomplete: 'off', spellcheck: 'false',
+    oninput: (e) => { cfg.key = e.target.value.trim(); saveAi(); renderReady(); },
+  });
+  const show = h('button', { class: 'btn small', type: 'button', text: 'Show' });
+  show.addEventListener('click', () => {
+    keyInput.type = keyInput.type === 'password' ? 'text' : 'password';
+    show.textContent = keyInput.type === 'password' ? 'Show' : 'Hide';
+  });
+  const enable = h('input', { type: 'checkbox', checked: !!cfg.enabled });
+  const card = h('div', { class: 'prov' + (cfg.enabled ? '' : ' off') },
+    h('div', { class: 'prov-head' },
+      h('label', { class: 'switch' }, enable, h('span')),
+      h('div', { class: 't', text: p.label }),
+      h('span', { class: 'ms', id: 'ms-' + id }),
+      h('button', { class: 'btn small ghost', type: 'button', title: 'Move up', text: '\u2191', onclick: () => move(-1) }),
+      h('button', { class: 'btn small ghost', type: 'button', title: 'Move down', text: '\u2193', onclick: () => move(1) })),
+    h('p', { class: 'small-text muted', style: 'margin-top:8px', text: p.note }),
+    h('div', { class: 'grid' },
+      h('div', {}, h('label', { class: 'lab', style: 'margin-top:0', text: 'API key' }), h('div', { class: 'keyrow' }, keyInput, show)),
+      h('div', {}, h('label', { class: 'lab', style: 'margin-top:0', text: 'Model' }),
+        h('div', { class: 'keyrow' },
+          h('input', { type: 'text', list: 'models-' + id, value: cfg.model, placeholder: 'model name', oninput: (e) => { cfg.model = e.target.value.trim(); saveAi(); } }),
+          h('button', { class: 'btn small', type: 'button', text: 'Load', title: 'Load the model list from the provider', onclick: () => loadModels(id) }))),
+      p.editableBase ? h('div', {}, h('label', { class: 'lab', text: 'Base URL' }),
+        h('input', { type: 'text', value: cfg.base, placeholder: 'https://api.example.com/v1', oninput: (e) => { cfg.base = e.target.value.trim(); saveAi(); renderReady(); } })) : null),
+    h('datalist', { id: 'models-' + id }, p.models.map((m) => h('option', { value: m }))),
+    h('div', { style: 'display:flex;gap:8px;margin-top:10px;flex-wrap:wrap' },
+      h('button', { class: 'btn small', type: 'button', text: 'Test speed', onclick: () => testProvider(id) }),
+      p.keyUrl ? h('a', { class: 'btn small ghost', href: p.keyUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Get a key' }) : null));
+  enable.addEventListener('change', () => { cfg.enabled = enable.checked; card.classList.toggle('off', !cfg.enabled); saveAi(); renderReady(); });
+  return card;
+}
+function renderSettings() {
+  const a = state.ai;
+  $('optMode').value = a.mode;
+  $('optParallel').value = a.concurrency;
+  $('optTimeout').value = a.timeoutSec;
+  $('optTokens').value = a.maxTokens;
+  $('optFast').checked = !!a.fast;
+  $('optRemember').checked = !!a.remember;
+  const sel = $('optSelected');
+  sel.textContent = '';
+  PROVIDER_ORDER.forEach((id) => sel.append(h('option', { value: id, text: PROVIDERS[id].label })));
+  sel.value = a.selected;
+  const box = $('provList');
+  box.textContent = '';
+  a.order.forEach((id) => box.append(providerCard(id)));
+}
+function renderReady() {
+  const box = $('aiReady');
+  if (!box) return;
+  const ready = readyProviders();
+  box.textContent = '';
+  if (!ready.length) {
+    box.append('No AI provider is ready yet. ', h('a', { href: '#', text: 'Add an API key in AI Settings', onclick: (e) => { e.preventDefault(); setView('settings'); } }), '.');
+    return;
+  }
+  const modes = { spread: 'sharing the work', fallback: 'using them in order', single: 'one provider only' };
+  box.append(h('b', { text: 'Ready: ' }), ready.map((id) => PROVIDERS[id].label).join(', '), ' (' + modes[state.ai.mode] + ', up to ' + state.ai.concurrency + ' at once)');
+}
+
+/* =====================================================================
+   AI STUDIO: generate many components in parallel
+   ===================================================================== */
+const aiStyles = new Set();
+function readAiForm() {
+  return {
+    prompt: $('aiPrompt').value.trim(), count: +$('aiCount').value, category: $('aiCategory').value,
+    styles: [...aiStyles], theme: $('aiTheme').value, animations: $('aiAnim').checked,
+    allowImages: $('aiImages').checked, extra: $('aiExtra').value.trim(),
+  };
+}
+function setGenerating(on) {
+  state.generating = on;
+  $('aiGenerate').disabled = on;
+  $('aiGenerate').lastChild.textContent = on ? ' Generating...' : ' Generate';
+  $('aiCancel').classList.toggle('hidden', !on);
+}
+async function generate() {
+  if (state.generating) return;
+  const form = readAiForm();
+  if (!form.prompt) { toast('Write what you want first.'); $('aiPrompt').focus(); return; }
+  if (!readyProviders().length) { toast('Add an AI key first.'); setView('settings'); return; }
+  state.abort = new AbortController();
+  state.batch++;
+  const cards = Array.from({ length: form.count }, (_, i) => ({
+    uid: newId('r_'), batch: state.batch, index: i, total: form.count, form, status: 'queued',
+    comp: null, selected: false, saved: null, log: [], variant: 0, error: '',
+  }));
+  state.results = cards.concat(state.results);
+  setGenerating(true);
+  renderResults();
+  await runPool(state.ai.concurrency, cards.map((card) => () => runCard(card)));
+  setGenerating(false);
+  const ok = cards.filter((c) => c.status === 'done').length;
+  toast(ok + ' of ' + cards.length + ' components ready' + (ok < cards.length ? ' (see the red ones)' : ''));
+}
+async function runCard(card) {
+  if (state.abort && state.abort.signal.aborted) { card.status = 'cancelled'; renderCard(card); return; }
+  card.status = 'running'; card.error = ''; card.log = [];
+  renderCard(card);
+  const f = card.form;
+  const user = buildUserPrompt({
+    prompt: f.prompt, index: card.index, hintIndex: card.index + card.variant * 5, total: card.total, category: f.category,
+    styles: f.styles, theme: f.theme, animations: f.animations, extra: f.extra,
+  });
+  try {
+    const result = await requestComponents({
+      user, index: card.index + card.variant, fallbackCategory: f.category !== 'auto' ? f.category : 'UI',
+      defaultName: f.prompt.slice(0, 40), allowImages: f.allowImages, signal: state.abort && state.abort.signal,
+      onFail: (id, e) => card.log.push(PROVIDERS[id].label + ': ' + e.message),
+    });
+    const comp = result.components[0];
+    if (f.category !== 'auto') comp.category = f.category;
+    Object.assign(card, { comp, provider: result.providerId, model: result.model, ms: result.ms, status: 'done' });
+  } catch (e) {
+    card.status = e.kind === 'cancel' ? 'cancelled' : 'error';
+    card.error = e.message;
+  }
+  renderCard(card);
+}
+function buildCardEl(card) {
+  const root = h('div', { class: 'res' + (card.selected ? ' sel' : '') });
+  if (card.status === 'queued' || card.status === 'running') {
+    root.append(h('div', { class: 'skeleton' }, h('div', {}, h('span', { class: 'spin' }), card.status === 'queued' ? ' Waiting...' : ' Writing code...')));
+    return root;
+  }
+  if (card.status === 'error' || card.status === 'cancelled') {
+    root.append(
+      h('div', { class: 'err' }, card.status === 'cancelled' ? 'Stopped.' : card.error || 'Failed.',
+        card.log.length ? h('div', { class: 'small-text muted', style: 'margin-top:8px;white-space:pre-wrap', text: card.log.join('\n') }) : null),
+      h('div', { class: 'body' }, h('div', { class: 'foot' },
+        h('button', { class: 'btn small', text: 'Try again', onclick: () => { card.variant++; runCard(card); } }),
+        h('button', { class: 'btn small ghost', text: 'Remove', onclick: () => discardCard(card) }))));
+    return root;
+  }
+  const comp = card.comp;
+  const catSel = h('select', { onchange: (e) => { comp.category = e.target.value; } });
+  categorySelect(catSel, false);
+  catSel.value = comp.category;
+  root.append(
+    h('iframe', { sandbox: 'allow-scripts', title: comp.name, srcdoc: buildDocument(comp, 'light'), loading: 'lazy' }),
+    h('div', { class: 'body' },
+      h('div', { class: 'top' },
+        h('input', { type: 'checkbox', checked: card.selected, style: 'width:auto', onchange: (e) => { card.selected = e.target.checked; root.classList.toggle('sel', card.selected); updateResultsHead(); } }),
+        h('input', { type: 'text', value: comp.name, maxlength: 50, oninput: (e) => { comp.name = e.target.value; } }),
+        card.saved ? h('span', { class: 'badge ' + (card.saved === 'published' ? 'pub' : 'draft'), text: card.saved === 'published' ? 'Published' : 'Draft' }) : null),
+      catSel,
+      h('input', { type: 'text', value: comp.description, maxlength: 100, placeholder: 'Short description', oninput: (e) => { comp.description = e.target.value; } }),
+      h('div', { class: 'info', text: PROVIDERS[card.provider].label + ' \u00B7 ' + (card.model || '') + ' \u00B7 ' + (card.ms / 1000).toFixed(1) + 's' }),
+      h('div', { class: 'foot' },
+        h('button', { class: 'btn small', text: 'Edit', onclick: () => openComponent(Object.assign({}, comp, { published: true }), true) }),
+        h('button', { class: 'btn small', text: 'Save draft', onclick: () => saveCards([card], false) }),
+        h('button', { class: 'btn small primary', text: 'Publish', onclick: () => saveCards([card], true) }),
+        h('button', { class: 'btn small ghost', text: 'Redo', onclick: () => { card.variant++; card.saved = null; runCard(card); } }),
+        h('button', { class: 'btn small ghost danger', text: 'Remove', onclick: () => discardCard(card) }))));
+  return root;
+}
+function renderCard(card) {
+  const fresh = buildCardEl(card);
+  if (card.el && card.el.parentNode) card.el.replaceWith(fresh);
+  card.el = fresh;
+  updateResultsHead();
+}
+function renderResults() {
+  const box = $('results');
+  box.textContent = '';
+  state.results.forEach((c) => { c.el = buildCardEl(c); box.append(c.el); });
+  $('resEmpty').classList.toggle('hidden', state.results.length > 0);
+  updateResultsHead();
+}
+function updateResultsHead() {
+  const r = state.results;
+  const count = (s) => r.filter((c) => c.status === s).length;
+  const parts = [count('done') + ' ready'];
+  if (count('running') + count('queued')) parts.push((count('running') + count('queued')) + ' working');
+  if (count('error')) parts.push(count('error') + ' failed');
+  $('resCount').textContent = r.length ? parts.join(' \u00B7 ') : 'Results';
+  const picked = r.filter((c) => c.selected && c.status === 'done').length;
+  $('resDrafts').textContent = 'Save selected as drafts' + (picked ? ' (' + picked + ')' : '');
+  $('resPublish').textContent = 'Publish selected' + (picked ? ' (' + picked + ')' : '');
+}
+function discardCard(card) {
+  state.results = state.results.filter((c) => c !== card);
+  renderResults();
+}
+async function saveCards(cards, published) {
+  const list = cards.filter((c) => c.status === 'done' && c.comp);
+  if (!list.length) { toast('Select some finished components first.'); return; }
+  list.forEach((c) => { c.comp.published = published; });
+  try {
+    await upsert(list.map((c) => c.comp));
+    list.forEach((c) => { c.saved = published ? 'published' : 'draft'; renderCard(c); });
+    toast(list.length + (published ? ' published. They are live in the app.' : ' saved as drafts.'));
+    await loadRows();
+  } catch (e) { toast(e.message || 'Could not save.'); }
+}
+
+/* =====================================================================
+   IMAGES
+   ===================================================================== */
+const publicUrl = (name) => STORAGE + '/object/public/' + BUCKET + '/' + encodeURIComponent(name);
+async function loadImages() {
+  const grid = $('mediaGrid');
+  grid.textContent = 'Loading...';
+  try {
+    await ensureFreshSession();
+    const response = await fetch(STORAGE + '/object/list/' + BUCKET, {
+      method: 'POST', headers: apiHeaders(),
+      body: JSON.stringify({ prefix: '', limit: 200, offset: 0, sortBy: { column: 'created_at', order: 'desc' } }),
+    });
+    if (!response.ok) throw new Error(await readError(response, 'Could not load images. Did you run storage.sql?'));
+    const items = (await response.json()).filter((x) => x.id);
+    grid.textContent = '';
+    if (!items.length) { grid.append(h('div', { class: 'muted', text: 'No images yet.' })); return; }
+    for (const item of items) {
+      const url = publicUrl(item.name);
+      grid.append(h('div', { class: 'thumb' },
+        h('img', { src: url, alt: item.name, loading: 'lazy' }),
+        h('div', { class: 'n', text: item.name }),
+        h('div', { class: 'b' },
+          h('button', { class: 'btn small', text: 'Copy link', onclick: () => copyText(url, 'Link copied') }),
+          h('button', { class: 'btn small', text: 'Copy <img>', onclick: () => copyText('<img src="' + url + '" alt="">', 'Tag copied') }),
+          h('button', { class: 'btn small danger', text: 'Delete', onclick: async () => {
+            if (!confirm('Delete ' + item.name + '?')) return;
+            try {
+              await ensureFreshSession();
+              const r = await fetch(STORAGE + '/object/' + BUCKET + '/' + encodeURIComponent(item.name), { method: 'DELETE', headers: apiHeaders() });
+              if (!r.ok) throw new Error(await readError(r, 'Could not delete'));
+              loadImages();
+            } catch (e) { toast(e.message); }
+          } }))));
+    }
+  } catch (e) { grid.textContent = ''; toast(e.message || 'Could not load images.'); }
+}
+async function uploadImages(files) {
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) { toast(file.name + ' is not an image.'); continue; }
+    const name = Date.now().toString(36) + '-' + file.name.replace(/[^\w.-]+/g, '-');
+    try {
+      await ensureFreshSession();
+      const response = await fetch(STORAGE + '/object/' + BUCKET + '/' + encodeURIComponent(name), {
+        method: 'POST', headers: apiHeaders({ 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' }), body: file,
+      });
+      if (!response.ok) throw new Error(await readError(response, 'Upload failed'));
+      toast('Uploaded ' + file.name);
+    } catch (e) { toast(e.message || 'Upload failed.'); }
+  }
+  $('mediaFile').value = '';
+  loadImages();
+}
+
+/* =====================================================================
+   NAVIGATION + EVENTS + START
+   ===================================================================== */
+function setView(name) {
+  state.view = name;
+  document.querySelectorAll('.view').forEach((v) => v.classList.toggle('hidden', v.id !== 'view-' + name));
+  document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('on', b.dataset.view === name));
+  if (name === 'images') loadImages();
+  if (name === 'settings') renderSettings();
+  if (name === 'ai') renderReady();
+}
+
+async function showApp() {
+  $('loginView').classList.add('hidden');
+  $('shell').classList.remove('hidden');
+  $('who').textContent = state.session.email || '';
+  setView('components');
+  try { await loadRows(); } catch (e) { toast(e.message); }
+}
+
+function segHandler(id, attr, onPick) {
+  $(id).addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    $(id).querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+    onPick(b.dataset[attr]);
+  });
+}
+
+function wireEvents() {
+  /* login + header */
+  $('loginBtn').addEventListener('click', login);
+  $('password').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+  $('logoutBtn').addEventListener('click', logout);
+  $('themeBtn').addEventListener('click', () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+  $('nav').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setView(b.dataset.view); });
+
+  /* list filters */
+  $('q').addEventListener('input', (e) => { state.filter.q = e.target.value; renderList(); });
+  segHandler('statusSeg', 'status', (v) => { state.filter.status = v; renderList(); });
+  $('catFilter').addEventListener('change', (e) => { state.filter.category = e.target.value; renderList(); });
+  $('sortSel').addEventListener('change', (e) => { state.filter.sort = e.target.value; renderList(); });
+  $('selectBtn').addEventListener('click', () => setSelecting(!state.selecting));
+  $('bulkAll').addEventListener('click', () => { visibleRows().forEach((r) => state.selected.add(r.id)); renderList(); });
+  $('bulkPub').addEventListener('click', () => bulk('publish'));
+  $('bulkUnpub').addEventListener('click', () => bulk('unpublish'));
+  $('bulkDel').addEventListener('click', () => bulk('delete'));
+  $('bulkMove').addEventListener('change', (e) => { const v = e.target.value; e.target.value = ''; if (v) bulk('move:' + v); });
+  $('newBtn').addEventListener('click', () => { openComponent(blankComponent(), true); $('name').focus(); });
+
+  /* editor */
+  const markDirty = () => { state.dirty = true; };
+  ['name', 'description', 'category'].forEach((id) => $(id).addEventListener('input', markDirty));
+  $('published').addEventListener('change', () => { markDirty(); $('pubLabel').textContent = $('published').checked ? 'Published' : 'Draft'; });
+  $('code').addEventListener('input', () => { markDirty(); clearTimeout(previewTimer); previewTimer = setTimeout(renderPreview, 300); });
+  $('code').addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const t = e.target;
+      const s = t.selectionStart;
+      t.value = t.value.slice(0, s) + '  ' + t.value.slice(t.selectionEnd);
+      t.selectionStart = t.selectionEnd = s + 2;
+    }
+  });
+  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
+  $('saveBtn').addEventListener('click', () => saveCurrent(true));
+  $('draftBtn').addEventListener('click', () => saveCurrent(false));
+  $('delBtn').addEventListener('click', deleteCurrent);
+  $('dupBtn').addEventListener('click', () => {
+    syncFromForm();
+    state.current = Object.assign({}, state.current, { id: newId(), name: state.current.name + ' copy', published: false });
+    state.isNew = true; state.dirty = true;
+    fillForm();
+    toast('Duplicated. Press Save to keep it.');
+  });
+  $('copyBtn').addEventListener('click', () => { syncFromForm(); copyText(singleFile(state.current), 'Whole component copied as one HTML file'); });
+  segHandler('deviceSeg', 'dev', (v) => { state.device = v; renderPreview(); });
+  segHandler('bgSeg', 'bg', (v) => { state.bg = v; renderPreview(); });
+  $('reloadPrev').addEventListener('click', renderPreview);
+  $('tabPrev').addEventListener('click', () => { if (state.current) { syncFromForm(); openPreviewTab(buildDocument(state.current, state.bg), state.current.name); } });
+
+  /* improve with AI */
+  $('aiQuick').append(...QUICK_AI.map((q) => h('span', { class: 'chip', text: q, onclick: () => improveCurrent(q) })));
+  $('aiApply').addEventListener('click', () => improveCurrent($('aiInstruction').value));
+  $('aiInstruction').addEventListener('keydown', (e) => { if (e.key === 'Enter') improveCurrent($('aiInstruction').value); });
+  $('aiUndo').addEventListener('click', () => {
+    if (!state.aiUndo) return;
+    Object.assign(state.current, state.aiUndo);
+    state.aiUndo = null; fillForm(); toast('AI change undone.');
+  });
+
+  /* AI studio */
+  $('aiCount').addEventListener('input', (e) => { $('aiCountVal').textContent = e.target.value; });
+  $('aiStyles').append(...STYLE_OPTIONS.map((s) => {
+    const chip = h('span', { class: 'chip', text: s });
+    chip.addEventListener('click', () => { chip.classList.toggle('on'); if (aiStyles.has(s)) aiStyles.delete(s); else aiStyles.add(s); });
+    return chip;
+  }));
+  $('aiGenerate').addEventListener('click', generate);
+  $('aiCancel').addEventListener('click', () => { if (state.abort) state.abort.abort(); toast('Stopping...'); });
+  $('aiPrompt').addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate(); });
+  $('resAll').addEventListener('click', () => {
+    const done = state.results.filter((c) => c.status === 'done');
+    const on = !done.every((c) => c.selected);
+    done.forEach((c) => { c.selected = on; if (c.el) c.el.classList.toggle('sel', on); const cb = c.el && c.el.querySelector('input[type=checkbox]'); if (cb) cb.checked = on; });
+    updateResultsHead();
+  });
+  $('resDrafts').addEventListener('click', () => saveCards(state.results.filter((c) => c.selected), false));
+  $('resPublish').addEventListener('click', () => saveCards(state.results.filter((c) => c.selected), true));
+  $('resClear').addEventListener('click', () => {
+    const unsaved = state.results.filter((c) => c.status === 'done' && !c.saved).length;
+    if (unsaved && !confirm(unsaved + ' generated components are not saved yet. Clear them anyway?')) return;
+    state.results = []; renderResults();
+  });
+
+  /* AI settings */
+  const num = (id, key, min, max) => $(id).addEventListener('change', (e) => {
+    const v = Math.max(min, Math.min(max, +e.target.value || min));
+    state.ai[key] = v; e.target.value = v; saveAi(); renderReady();
+  });
+  $('optMode').addEventListener('change', (e) => { state.ai.mode = e.target.value; saveAi(); renderReady(); });
+  $('optSelected').addEventListener('change', (e) => { state.ai.selected = e.target.value; saveAi(); });
+  num('optParallel', 'concurrency', 1, 6);
+  num('optTimeout', 'timeoutSec', 10, 240);
+  num('optTokens', 'maxTokens', 1000, 16000);
+  $('optFast').addEventListener('change', (e) => { state.ai.fast = e.target.checked; saveAi(); });
+  $('optRemember').addEventListener('change', (e) => { state.ai.remember = e.target.checked; saveAi(); });
+  $('testAll').addEventListener('click', testAll);
+  $('clearKeys').addEventListener('click', () => {
+    if (!confirm('Remove every saved API key from this browser?')) return;
+    PROVIDER_ORDER.forEach((id) => { state.ai.providers[id].key = ''; state.ai.providers[id].enabled = false; });
+    saveAi(); renderSettings(); renderReady(); toast('All keys removed from this browser.');
+  });
+
+  /* images */
+  $('mediaFile').addEventListener('change', (e) => { if (e.target.files.length) uploadImages([...e.target.files]); });
+  const drop = $('drop');
+  ['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', (e) => { if (e.dataTransfer.files.length) uploadImages([...e.dataTransfer.files]); });
+
+  /* shortcuts + safety */
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && state.view === 'components' && state.current) { e.preventDefault(); saveCurrent($('published').checked); }
+  });
+  window.addEventListener('beforeunload', (e) => { if (state.dirty || state.generating) { e.preventDefault(); e.returnValue = ''; } });
+}
+
+function init() {
+  applyTheme(localStorage.getItem('decode_admin_theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  $('brand').innerHTML = LOGO + '<span>Decode Admin</span>';
+  $('loginLogo').innerHTML = LOGO + '<span>Decode Admin</span>';
+  paintIcons();
+  $('reloadPrev').append(icon('refresh'));
+  $('tabPrev').append(icon('external'));
+  categorySelect($('category'), false);
+  categorySelect($('aiCategory'), true);
+  const move = $('bulkMove');
+  move.append(h('option', { value: '', text: 'Move to...' }));
+  CATEGORY_GROUPS.forEach(([g, cats]) => move.append(h('optgroup', { label: g }, cats.map((c) => h('option', { value: c, text: c })))));
+  loadAi();
+  wireEvents();
+  renderReady();
+  try {
+    const saved = JSON.parse(localStorage.getItem('decode_admin_session') || sessionStorage.getItem('decode_admin_session') || 'null');
+    if (saved && saved.access_token) { state.session = saved; showApp(); }
+  } catch (_) { /* start logged out */ }
+}
+init();
+
+</script>
+</body>
+</html>

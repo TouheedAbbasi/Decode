@@ -274,6 +274,16 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
               onPressed: () => _scaffoldKey.currentState?.openDrawer(),
             ),
             IconButton(
+              tooltip: ref.watch(wordWrapProvider)
+                  ? 'Word wrap: on'
+                  : 'Word wrap: off',
+              isSelected: ref.watch(wordWrapProvider),
+              icon: const Icon(Icons.wrap_text_rounded),
+              onPressed: () => ref
+                  .read(wordWrapProvider.notifier)
+                  .set(!ref.read(wordWrapProvider)),
+            ),
+            IconButton(
               tooltip: 'Find and replace',
               icon: const Icon(Icons.search_rounded),
               onPressed: _buffers.isEmpty
@@ -352,6 +362,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             fontSize: fontSize,
             showLineNumbers: ref.watch(lineNumbersProvider),
             smartTyping: ref.watch(smartTypingProvider),
+            wrap: ref.watch(wordWrapProvider),
           ),
         ),
       ],

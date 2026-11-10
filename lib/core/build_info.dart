@@ -1,5 +1,5 @@
 /// Shown in Settings so you can tell which build you are running.
-const appVersion = '0.6.0';
+const appVersion = '0.7.0';
 
 /// Set to true by the GitHub workflow (`--dart-define=DECODE_CI_PATCHED=true`)
 /// after it has patched the Android project (permissions, icon, name).

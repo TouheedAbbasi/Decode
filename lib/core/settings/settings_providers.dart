@@ -75,3 +75,8 @@ final autosaveProvider = NotifierProvider<BoolPrefNotifier, bool>(
 final smartTypingProvider = NotifierProvider<BoolPrefNotifier, bool>(
   () => BoolPrefNotifier('smart_typing', true),
 );
+
+/// Wrap long lines in the editor (on by default).
+final wordWrapProvider = NotifierProvider<BoolPrefNotifier, bool>(
+  () => BoolPrefNotifier('word_wrap', true),
+);

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { --bg:#fafaf8; --surface:#fff; --border:#e6e6e1; --text:#1b1c20; --muted:#6b6f7b; --accent:#4f46e5; --soft:#eeedfc; }
+  :root[data-theme="dark"] { --bg:#0e1015; --surface:#161922; --border:#262a36; --text:#e9eaef; --muted:#8d93a5; --accent:#7168f7; --soft:#23254a; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); padding-bottom: 150px; }
+  .bar { position: sticky; top:0; z-index:5; background:var(--bg); padding:10px 12px 8px; border-bottom:1px solid var(--border); }
+  .row { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .chip { padding:6px 12px; border-radius:999px; border:1px solid var(--border); background:var(--surface); font-size:13px; font-weight:600; cursor:pointer; color:var(--text); }
+  .chip.on { background:var(--soft); border-color:var(--accent); color:var(--accent); }
+  input[type=search] { width:100%; margin-top:8px; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:15px; outline:none; }
+  input[type=search]:focus { border-color:var(--accent); }
+  #status { padding:14px 14px 0; color:var(--muted); font-size:13px; }
+  #grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:8px; padding:12px; }
+  .ico { border:1px solid var(--border); background:var(--surface); border-radius:12px; padding:12px 4px 8px; text-align:center; cursor:pointer; color:var(--text); min-width:0; }
+  .ico.sel { border-color:var(--accent); background:var(--soft); }
+  .ico .g { font-size:26px; height:32px; display:flex; align-items:center; justify-content:center; }
+  .ico .n { font-size:10px; color:var(--muted); margin-top:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #more { display:block; margin:6px auto 20px; padding:10px 18px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-weight:600; }
+  #sheet { position:fixed; left:0; right:0; bottom:0; background:var(--surface); border-top:1px solid var(--border); padding:12px 14px 16px; box-shadow:0 -8px 24px rgba(0,0,0,.12); z-index:9; }
+  #sheet .top { display:flex; gap:12px; align-items:center; }
+  #sheet .big { font-size:40px; width:56px; height:56px; display:flex; align-items:center; justify-content:center; background:var(--bg); border-radius:12px; }
+  #sheet .name { font-weight:700; }
+  pre { margin:10px 0 0; padding:9px 10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; font-size:12px; overflow:auto; white-space:pre-wrap; word-break:break-all; }
+  .btns { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .btn { padding:8px 12px; border-radius:9px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-weight:600; font-size:13px; }
+  .btn.p { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .hidden { display:none !important; }
+  .material-icons { font-size:26px; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="row" id="libs"></div>
+  <div class="row" style="margin-top:8px" id="modes"></div>
+  <input type="search" id="q" placeholder="Search icons, e.g. home, user, arrow">
+</div>
+<div id="status">Loading icons...</div>
+<div id="grid"></div>
+<button id="more" class="hidden">Show more</button>
+<div id="sheet" class="hidden">
+  <div class="top"><div class="big" id="sBig"></div><div><div class="name" id="sName"></div><div style="color:var(--muted);font-size:12px" id="sLib"></div></div></div>
+  <pre id="sCode"></pre>
+  <div class="btns">
+    <button class="btn p" id="cCode">Copy icon code</button>
+    <button class="btn" id="cLink">Copy link tag</button>
+    <button class="btn" id="cName">Copy name</button>
+    <button class="btn" id="cClose">Close</button>
+  </div>
+</div>
+<script>
+window.setTheme = function (t) { document.documentElement.dataset.theme = t; };
+
+var POP = {
+  bootstrap: 'house search person list heart star cart envelope telephone gear bell calendar camera chat check-circle x-lg arrow-right arrow-left download upload trash pencil eye lock unlock share github facebook twitter-x instagram linkedin youtube whatsapp tiktok moon sun cloud bookmark geo-alt clock info-circle exclamation-triangle play-fill pause-fill three-dots grid plus-lg dash-lg box-arrow-right shield-check wifi lightning globe code-slash terminal image music-note mic fullscreen funnel sliders tag credit-card wallet bag truck house-door person-circle people chat-dots send paperclip link-45deg printer save2 folder file-earmark-text palette brush rocket-takeoff trophy gift fire hand-thumbs-up emoji-smile'.split(' '),
+  material: 'home search person menu favorite star shopping_cart mail phone settings notifications event photo_camera chat check_circle close arrow_forward arrow_back download upload delete edit visibility lock lock_open share bookmark place schedule info warning play_arrow pause more_vert more_horiz apps add remove logout verified_user wifi bolt language code terminal dark_mode light_mode cloud image music_note mic fullscreen filter_list tune sell credit_card account_balance_wallet local_shipping account_circle group send attach_file link print save folder description palette brush rocket_launch emoji_events card_giftcard local_fire_department thumb_up sentiment_satisfied dashboard analytics trending_up payments support_agent help'.split(' '),
+  fa: 'house magnifying-glass user bars heart star cart-shopping envelope phone gear bell calendar camera comment circle-check xmark arrow-right arrow-left download upload trash pen eye lock unlock share-nodes bookmark location-dot clock circle-info triangle-exclamation play pause ellipsis-vertical plus minus right-from-bracket shield-halved wifi bolt globe code terminal moon sun cloud image music microphone expand filter sliders tag credit-card wallet bag-shopping truck circle-user users paper-plane paperclip link print floppy-disk folder file-lines palette paintbrush rocket trophy gift fire thumbs-up face-smile chart-line headset circle-question github facebook x-twitter instagram linkedin youtube whatsapp tiktok telegram'.split(' ')
+};
+
+var SAFE = /^[A-Za-z0-9_:\-]+$/;
+var LIBS = {
+  bootstrap: {
+    label: 'Bootstrap Icons',
+    css: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css',
+    load: function () {
+      return fetch('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.json')
+        .then(function (r) { return r.json(); })
+        .then(function (j) { return Object.keys(j).map(function (n) { return { name: n, key: n }; }); });
+    },
+    markup: function (key) { return '<i class="bi bi-' + key + '"></i>'; }
+  },
+  material: {
+    label: 'Material Icons',
+    css: 'https://fonts.googleapis.com/icon?family=Material+Icons',
+    load: function () {
+      return fetch('https://cdn.jsdelivr.net/gh/google/material-design-icons@master/font/MaterialIcons-Regular.codepoints')
+        .then(function (r) { return r.text(); })
+        .then(function (t) {
+          return t.split('\n').map(function (l) { return l.split(' ')[0]; }).filter(Boolean)
+            .map(function (n) { return { name: n, key: n }; });
+        });
+    },
+    markup: function (key) { return '<span class="material-icons">' + key + '</span>'; }
+  },
+  fa: {
+    label: 'Font Awesome',
+    css: 'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css',
+    load: function () {
+      return fetch('https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/metadata/icons.json')
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          return Object.keys(j).filter(function (n) { return (j[n].free || []).length; }).map(function (n) {
+            var free = j[n].free;
+            var style = free.indexOf('solid') >= 0 ? 'solid' : free.indexOf('regular') >= 0 ? 'regular' : 'brands';
+            return { name: n, key: style + ':' + n };
+          });
+        });
+    },
+    markup: function (key) { var p = key.split(':'); return '<i class="fa-' + p[0] + ' fa-' + p[1] + '"></i>'; }
+  }
+};
+
+var state = { lib: 'bootstrap', mode: 'popular', q: '', all: {}, shown: 120, sel: null };
+var $ = function (id) { return document.getElementById(id); };
+
+function copy(text) {
+  try { if (window.DecodeCopy) { DecodeCopy.postMessage(text); return; } } catch (e) { /* fall through */ }
+  if (navigator.clipboard) navigator.clipboard.writeText(text);
+}
+function linkTag(lib) { return '<link rel="stylesheet" href="' + LIBS[lib].css + '">'; }
+function loadCss(lib) {
+  var id = 'css-' + lib;
+  if (document.getElementById(id)) return;
+  var l = document.createElement('link');
+  l.id = id; l.rel = 'stylesheet'; l.href = LIBS[lib].css;
+  document.head.appendChild(l);
+}
+
+function listFor() {
+  var all = state.all[state.lib] || [];
+  var q = state.q.trim().toLowerCase();
+  var base = all;
+  if (state.mode === 'popular' && !q) {
+    var wanted = POP[state.lib];
+    var byName = {};
+    all.forEach(function (i) { byName[i.name] = i; });
+    base = wanted.map(function (n) { return byName[n]; }).filter(Boolean);
+  }
+  if (q) base = base.filter(function (i) { return i.name.toLowerCase().indexOf(q) >= 0; });
+  return base;
+}
+
+function render() {
+  var grid = $('grid');
+  grid.textContent = '';
+  var list = listFor();
+  var lib = LIBS[state.lib];
+  list.slice(0, state.shown).forEach(function (i) {
+    if (!SAFE.test(i.key)) return;
+    var cell = document.createElement('div');
+    cell.className = 'ico' + (state.sel && state.sel.key === i.key && state.sel.lib === state.lib ? ' sel' : '');
+    var g = document.createElement('div'); g.className = 'g'; g.innerHTML = lib.markup(i.key);
+    var n = document.createElement('div'); n.className = 'n'; n.textContent = i.name;
+    cell.appendChild(g); cell.appendChild(n);
+    cell.addEventListener('click', function () { select(i); });
+    grid.appendChild(cell);
+  });
+  $('more').classList.toggle('hidden', list.length <= state.shown);
+  $('status').textContent = list.length ? list.length + ' icons' + (state.mode === 'popular' && !state.q ? ' (popular)' : '') : 'No icons found.';
+}
+
+function select(i) {
+  state.sel = { key: i.key, name: i.name, lib: state.lib };
+  var lib = LIBS[state.lib];
+  $('sBig').innerHTML = lib.markup(i.key);
+  $('sName').textContent = i.name;
+  $('sLib').textContent = lib.label;
+  $('sCode').textContent = lib.markup(i.key) + '\n' + linkTag(state.lib);
+  $('sheet').classList.remove('hidden');
+  render();
+}
+
+function buildBars() {
+  var libs = $('libs'); libs.textContent = '';
+  Object.keys(LIBS).forEach(function (k) {
+    var b = document.createElement('button'); b.className = 'chip' + (state.lib === k ? ' on' : ''); b.textContent = LIBS[k].label;
+    b.addEventListener('click', function () { setLib(k); });
+    libs.appendChild(b);
+  });
+  var modes = $('modes'); modes.textContent = '';
+  [['popular', 'Popular'], ['all', 'All icons']].forEach(function (m) {
+    var b = document.createElement('button'); b.className = 'chip' + (state.mode === m[0] ? ' on' : ''); b.textContent = m[1];
+    b.addEventListener('click', function () { state.mode = m[0]; state.shown = 120; buildBars(); render(); });
+    modes.appendChild(b);
+  });
+}
+
+function setLib(k) {
+  state.lib = k; state.shown = 120; $('sheet').classList.add('hidden');
+  buildBars(); loadCss(k);
+  if (state.all[k]) { render(); return; }
+  $('grid').textContent = ''; $('status').textContent = 'Loading ' + LIBS[k].label + '...';
+  LIBS[k].load().then(function (list) { state.all[k] = list; if (state.lib === k) render(); })
+    .catch(function () { $('status').textContent = 'Could not load the icon list. This page needs an internet connection.'; });
+}
+
+$('q').addEventListener('input', function (e) { state.q = e.target.value; state.shown = 120; render(); });
+$('more').addEventListener('click', function () { state.shown += 200; render(); });
+$('cClose').addEventListener('click', function () { $('sheet').classList.add('hidden'); });
+$('cCode').addEventListener('click', function () { if (state.sel) copy(LIBS[state.sel.lib].markup(state.sel.key)); });
+$('cLink').addEventListener('click', function () { if (state.sel) copy(linkTag(state.sel.lib)); });
+$('cName').addEventListener('click', function () { if (state.sel) copy(state.sel.name); });
+setLib('bootstrap');
+</script>
+</body>
+</html>

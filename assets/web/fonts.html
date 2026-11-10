@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { --bg:#fafaf8; --surface:#fff; --border:#e6e6e1; --text:#1b1c20; --muted:#6b6f7b; --accent:#4f46e5; --soft:#eeedfc; }
+  :root[data-theme="dark"] { --bg:#0e1015; --surface:#161922; --border:#262a36; --text:#e9eaef; --muted:#8d93a5; --accent:#7168f7; --soft:#23254a; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); padding-bottom: 210px; }
+  .bar { position: sticky; top:0; z-index:5; background:var(--bg); padding:10px 12px 8px; border-bottom:1px solid var(--border); }
+  .row { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .scroll { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; }
+  .chip { padding:6px 12px; border-radius:999px; border:1px solid var(--border); background:var(--surface); font-size:13px; font-weight:600; cursor:pointer; color:var(--text); white-space:nowrap; }
+  .chip.on { background:var(--soft); border-color:var(--accent); color:var(--accent); }
+  input[type=search], input[type=text] { width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:15px; outline:none; }
+  input:focus { border-color:var(--accent); }
+  #list { padding:10px 12px; }
+  .font { border:1px solid var(--border); background:var(--surface); border-radius:12px; padding:12px 14px; margin-bottom:10px; cursor:pointer; }
+  .font.sel { border-color:var(--accent); background:var(--soft); }
+  .font .meta { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); }
+  .font .sample { margin-top:6px; line-height:1.3; overflow:hidden; text-overflow:ellipsis; }
+  .pair { border:1px solid var(--border); background:var(--surface); border-radius:12px; padding:14px; margin-bottom:10px; cursor:pointer; }
+  .pair h3 { margin:0 0 6px; font-size:24px; line-height:1.2; }
+  .pair p { margin:0; font-size:14px; line-height:1.5; color:var(--muted); }
+  .pair .meta { margin-top:8px; font-size:11px; color:var(--muted); }
+  #sheet { position:fixed; left:0; right:0; bottom:0; background:var(--surface); border-top:1px solid var(--border); padding:12px 14px 16px; box-shadow:0 -8px 24px rgba(0,0,0,.12); z-index:9; max-height: 60vh; overflow:auto; }
+  #sheet .name { font-weight:700; font-size:16px; }
+  pre { margin:8px 0 0; padding:9px 10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; font-size:12px; overflow:auto; white-space:pre-wrap; word-break:break-all; }
+  .btns { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .btn { padding:8px 12px; border-radius:9px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-weight:600; font-size:13px; }
+  .btn.p { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .hidden { display:none !important; }
+  #note { padding:8px 14px 0; font-size:12px; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="row" id="tabs"></div>
+  <div class="scroll" id="cats" style="margin-top:8px"></div>
+  <input type="search" id="q" placeholder="Search fonts" style="margin-top:8px">
+  <div class="row" style="margin-top:8px">
+    <input type="text" id="sample" placeholder="Type your own preview text" style="flex:1">
+    <input type="range" id="size" min="16" max="56" value="28" style="width:110px">
+  </div>
+</div>
+<div id="note">Fonts load from Google Fonts, so this page needs an internet connection.</div>
+<div id="list"></div>
+<div id="sheet" class="hidden">
+  <div class="name" id="sName"></div>
+  <div class="row" id="weights" style="margin-top:8px"></div>
+  <pre id="sCode"></pre>
+  <div class="btns">
+    <button class="btn p" id="cLink">Copy link tag</button>
+    <button class="btn" id="cCss">Copy font-family</button>
+    <button class="btn" id="cImport">Copy @import</button>
+    <button class="btn" id="cClose">Close</button>
+  </div>
+</div>
+<script>
+window.setTheme = function (t) { document.documentElement.dataset.theme = t; };
+
+var FONTS = {
+  'Sans-serif': ['Roboto','Open Sans','Montserrat','Lato','Poppins','Inter','Nunito','Raleway','Ubuntu','Work Sans','Rubik','Mulish','Noto Sans','PT Sans','Source Sans 3','DM Sans','Manrope','Quicksand','Karla','Barlow','Cabin','Fira Sans','Josefin Sans','Oxygen','Heebo','IBM Plex Sans','Titillium Web','Hind','Archivo','Assistant','Outfit','Plus Jakarta Sans','Space Grotesk','Lexend','Sora','Urbanist','Figtree','Red Hat Display','Jost','Be Vietnam Pro','Public Sans','Overpass','Catamaran','Exo 2','Questrial','Varela Round','Comfortaa','Kanit','Prompt','Mukta'],
+  'Serif': ['Playfair Display','Merriweather','Lora','PT Serif','Noto Serif','Libre Baskerville','Crimson Text','EB Garamond','Cormorant Garamond','Source Serif 4','Bitter','Roboto Slab','Zilla Slab','Cardo','Spectral','DM Serif Display','Abril Fatface','Domine','Vollkorn','Arvo','Old Standard TT','Alegreya','Libre Caslon Text'],
+  'Display': ['Bebas Neue','Oswald','Anton','Righteous','Fredoka','Bangers','Staatliches','Alfa Slab One','Passion One','Russo One','Black Ops One','Monoton','Orbitron','Audiowide','Press Start 2P','Bungee','Teko','Archivo Black','Chewy','Luckiest Guy','Cinzel','Lobster','Permanent Marker'],
+  'Handwriting': ['Pacifico','Dancing Script','Caveat','Satisfy','Great Vibes','Shadows Into Light','Indie Flower','Amatic SC','Kaushan Script','Sacramento','Courgette','Patrick Hand','Architects Daughter','Gloria Hallelujah','Yellowtail','Cookie','Allura','Parisienne'],
+  'Monospace': ['Roboto Mono','Source Code Pro','Fira Code','JetBrains Mono','IBM Plex Mono','Space Mono','Inconsolata','Ubuntu Mono','Courier Prime','DM Mono','Anonymous Pro','Share Tech Mono','VT323','Overpass Mono'],
+  'Urdu & Arabic': ['Noto Nastaliq Urdu','Amiri','Cairo','Tajawal','Almarai','IBM Plex Sans Arabic','Noto Naskh Arabic','Lateef','Scheherazade New','Reem Kufi','El Messiri','Changa','Lalezar','Mada','Markazi Text','Vazirmatn','Harmattan','Aref Ruqaa','Rakkas','Katibeh']
+};
+var FALLBACK = { 'Sans-serif': 'sans-serif', 'Serif': 'serif', 'Display': 'sans-serif', 'Handwriting': 'cursive', 'Monospace': 'monospace', 'Urdu & Arabic': 'sans-serif' };
+var SAMPLE = { 'Urdu & Arabic': '\u0627\u0631\u062F\u0648 \u0632\u0628\u0627\u0646 \u06A9\u06CC \u062E\u0648\u0628\u0635\u0648\u0631\u062A\u06CC' };
+var DEFAULT_SAMPLE = 'The quick brown fox jumps over the lazy dog';
+var PAIRS = [
+  ['Playfair Display', 'Source Sans 3', 'serif', 'sans-serif'], ['Montserrat', 'Merriweather', 'sans-serif', 'serif'],
+  ['Poppins', 'Inter', 'sans-serif', 'sans-serif'], ['Raleway', 'Lato', 'sans-serif', 'sans-serif'],
+  ['Oswald', 'Open Sans', 'sans-serif', 'sans-serif'], ['Roboto Slab', 'Roboto', 'serif', 'sans-serif'],
+  ['Abril Fatface', 'Poppins', 'serif', 'sans-serif'], ['Space Grotesk', 'Inter', 'sans-serif', 'sans-serif'],
+  ['DM Serif Display', 'DM Sans', 'serif', 'sans-serif'], ['Lora', 'Montserrat', 'serif', 'sans-serif'],
+  ['Bebas Neue', 'Montserrat', 'sans-serif', 'sans-serif'], ['Cormorant Garamond', 'Nunito', 'serif', 'sans-serif'],
+  ['Rubik', 'Work Sans', 'sans-serif', 'sans-serif'], ['Playfair Display', 'Lato', 'serif', 'sans-serif'],
+  ['Amiri', 'Cairo', 'serif', 'sans-serif']
+];
+
+var $ = function (id) { return document.getElementById(id); };
+var state = { tab: 'fonts', cat: 'Sans-serif', q: '', sample: '', size: 28, sel: null, weights: { 400: true, 700: true } };
+var loaded = {};
+
+function copy(text) {
+  try { if (window.DecodeCopy) { DecodeCopy.postMessage(text); return; } } catch (e) { /* fall through */ }
+  if (navigator.clipboard) navigator.clipboard.writeText(text);
+}
+function family(name) { return name.replace(/ /g, '+'); }
+function quote(name) { return "'" + name + "'"; }
+function cssUrl(families) {
+  // families: [[name, [weights...]], ...]
+  return 'https://fonts.googleapis.com/css?family=' + families.map(function (f) {
+    return family(f[0]) + (f[1] && f[1].length ? ':' + f[1].join(',') : '');
+  }).join('|') + '&display=swap';
+}
+function loadFont(name, weights) {
+  var url = cssUrl([[name, weights || []]]);
+  if (loaded[url]) return;
+  loaded[url] = true;
+  var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = url;
+  document.head.appendChild(l);
+}
+function fallbackOf(name) {
+  for (var c in FONTS) { if (FONTS[c].indexOf(name) >= 0) return FALLBACK[c]; }
+  return 'sans-serif';
+}
+function sampleFor(cat) { return state.sample || SAMPLE[cat] || DEFAULT_SAMPLE; }
+
+var observer = ('IntersectionObserver' in window) ? new IntersectionObserver(function (entries) {
+  entries.forEach(function (e) {
+    if (e.isIntersecting) { loadFont(e.target.dataset.font, ['400']); observer.unobserve(e.target); }
+  });
+}, { rootMargin: '300px' }) : null;
+
+function buildTabs() {
+  var tabs = $('tabs'); tabs.textContent = '';
+  [['fonts', 'Fonts'], ['pairs', 'Pairings']].forEach(function (t) {
+    var b = document.createElement('button'); b.className = 'chip' + (state.tab === t[0] ? ' on' : ''); b.textContent = t[1];
+    b.addEventListener('click', function () { state.tab = t[0]; $('sheet').classList.add('hidden'); buildTabs(); buildCats(); render(); });
+    tabs.appendChild(b);
+  });
+}
+function buildCats() {
+  var box = $('cats'); box.textContent = '';
+  $('cats').classList.toggle('hidden', state.tab !== 'fonts');
+  Object.keys(FONTS).forEach(function (c) {
+    var b = document.createElement('button'); b.className = 'chip' + (state.cat === c ? ' on' : ''); b.textContent = c + ' (' + FONTS[c].length + ')';
+    b.addEventListener('click', function () { state.cat = c; buildCats(); render(); });
+    box.appendChild(b);
+  });
+}
+
+function render() {
+  var list = $('list'); list.textContent = '';
+  var q = state.q.trim().toLowerCase();
+  if (state.tab === 'pairs') {
+    PAIRS.filter(function (p) { return !q || (p[0] + ' ' + p[1]).toLowerCase().indexOf(q) >= 0; }).forEach(function (p) {
+      loadFont(p[0], ['700']); loadFont(p[1], ['400', '600']);
+      var card = document.createElement('div'); card.className = 'pair';
+      var h = document.createElement('h3'); h.style.fontFamily = quote(p[0]) + ', ' + p[2]; h.style.fontWeight = '700'; h.textContent = state.sample || (p[0] === 'Amiri' ? SAMPLE['Urdu & Arabic'] : 'Build something great');
+      var t = document.createElement('p'); t.style.fontFamily = quote(p[1]) + ', ' + p[3]; t.textContent = 'A short paragraph shows how the heading and the body text read together on a real page.';
+      var m = document.createElement('div'); m.className = 'meta'; m.textContent = p[0] + '  +  ' + p[1] + '   (tap to copy)';
+      card.appendChild(h); card.appendChild(t); card.appendChild(m);
+      card.addEventListener('click', function () { copy(pairCode(p)); });
+      list.appendChild(card);
+    });
+    return;
+  }
+  var cats = q ? Object.keys(FONTS) : [state.cat];
+  cats.forEach(function (c) {
+    FONTS[c].filter(function (n) { return !q || n.toLowerCase().indexOf(q) >= 0; }).forEach(function (name) {
+      var card = document.createElement('div'); card.className = 'font' + (state.sel === name ? ' sel' : ''); card.dataset.font = name;
+      var meta = document.createElement('div'); meta.className = 'meta';
+      var a = document.createElement('b'); a.textContent = name; var b = document.createElement('span'); b.textContent = c;
+      meta.appendChild(a); meta.appendChild(b);
+      var s = document.createElement('div'); s.className = 'sample';
+      s.style.fontFamily = quote(name) + ', ' + FALLBACK[c]; s.style.fontSize = state.size + 'px'; s.textContent = sampleFor(c);
+      if (c === 'Urdu & Arabic') s.style.direction = 'rtl';
+      card.appendChild(meta); card.appendChild(s);
+      card.addEventListener('click', function () { select(name); });
+      list.appendChild(card);
+      if (observer) observer.observe(card); else loadFont(name, ['400']);
+    });
+  });
+  if (!list.firstChild) { var e = document.createElement('div'); e.style.color = 'var(--muted)'; e.textContent = 'No fonts found.'; list.appendChild(e); }
+}
+
+function chosenWeights() {
+  return Object.keys(state.weights).filter(function (w) { return state.weights[w]; });
+}
+function snippet() {
+  var name = state.sel; var w = chosenWeights();
+  return {
+    link: '<link rel="stylesheet" href="' + cssUrl([[name, w]]) + '">',
+    imp: "@import url('" + cssUrl([[name, w]]) + "');",
+    css: 'font-family: ' + quote(name) + ', ' + fallbackOf(name) + ';'
+  };
+}
+function pairCode(p) {
+  var url = cssUrl([[p[0], ['700']], [p[1], ['400', '600']]]);
+  return '<link rel="stylesheet" href="' + url + '">\n\n/* CSS */\nh1, h2, h3 { font-family: ' + quote(p[0]) + ', ' + p[2] + '; }\nbody { font-family: ' + quote(p[1]) + ', ' + p[3] + '; }';
+}
+function select(name) {
+  state.sel = name;
+  $('sName').textContent = name;
+  var box = $('weights'); box.textContent = '';
+  ['300', '400', '500', '600', '700'].forEach(function (w) {
+    var b = document.createElement('button'); b.className = 'chip' + (state.weights[w] ? ' on' : ''); b.textContent = w;
+    b.addEventListener('click', function () { state.weights[w] = !state.weights[w]; select(name); });
+    box.appendChild(b);
+  });
+  var note = document.createElement('span'); note.style.cssText = 'font-size:11px;color:var(--muted)'; note.textContent = 'Weights a font does not have are ignored.';
+  box.appendChild(note);
+  loadFont(name, chosenWeights());
+  $('sCode').textContent = snippet().link + '\n\n' + snippet().css;
+  $('sheet').classList.remove('hidden');
+  render();
+}
+
+$('q').addEventListener('input', function (e) { state.q = e.target.value; render(); });
+$('sample').addEventListener('input', function (e) { state.sample = e.target.value; render(); });
+$('size').addEventListener('input', function (e) { state.size = +e.target.value; render(); });
+$('cLink').addEventListener('click', function () { if (state.sel) copy(snippet().link); });
+$('cCss').addEventListener('click', function () { if (state.sel) copy(snippet().css); });
+$('cImport').addEventListener('click', function () { if (state.sel) copy(snippet().imp); });
+$('cClose').addEventListener('click', function () { $('sheet').classList.add('hidden'); });
+buildTabs(); buildCats(); render();
+</script>
+</body>
+</html>

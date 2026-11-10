@@ -15,12 +15,14 @@ class CodeEditorPane extends StatelessWidget {
     required this.fontSize,
     this.showLineNumbers = true,
     this.smartTyping = true,
+    this.wrap = true,
   });
 
   final EditorBuffer buffer;
   final double fontSize;
   final bool showLineNumbers;
   final bool smartTyping;
+  final bool wrap;
 
   static const _symbols = [
     '<', '>', '/', '{', '}', '(', ')', '[', ']', '"', "'", ';', ':', '=', '.',
@@ -74,6 +76,7 @@ class CodeEditorPane extends StatelessWidget {
             fontSize: fontSize,
             showLineNumbers: showLineNumbers,
             smartTyping: smartTyping,
+            wrap: wrap,
           ),
         ),
         ListenableBuilder(
@@ -97,7 +100,7 @@ class CodeEditorPane extends StatelessWidget {
     var column = 1;
     var selected = 0;
     if (selection.isValid) {
-      final offset = selection.start.clamp(0, text.length);
+      final offset = selection.start.clamp(0, text.length).toInt();
       for (var i = 0; i < offset; i++) {
         if (text.codeUnitAt(i) == 10) line++;
       }

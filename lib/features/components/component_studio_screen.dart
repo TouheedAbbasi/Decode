@@ -255,6 +255,7 @@ class _ComponentStudioScreenState extends ConsumerState<ComponentStudioScreen> {
               fontSize: fontSize,
               showLineNumbers: ref.watch(lineNumbersProvider),
               smartTyping: ref.watch(smartTypingProvider),
+              wrap: ref.watch(wordWrapProvider),
             ),
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../projects/templates.dart';
+import 'component_library.dart';
 
 class ComponentItem {
   const ComponentItem({
@@ -145,7 +146,10 @@ class ComponentItem {
     final html = str(row['html']);
     if (id.isEmpty || name.isEmpty || html.trim().isEmpty) return null;
     var category = str(row['category']);
-    if (!categories.contains(category)) category = 'UI';
+    if (!categories.contains(category)) {
+      final mapped = normalizeCategory(category);
+      category = categories.contains(mapped) ? mapped : 'UI';
+    }
     return ComponentItem(
       id: id,
       name: name,
